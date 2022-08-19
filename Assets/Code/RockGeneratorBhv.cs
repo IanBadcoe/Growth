@@ -101,7 +101,9 @@ public class RockGeneratorBhv : MonoBehaviour
 
                     if (Grid[pos] == null)
                     {
-                        Grid.Instantiate(CellPrefab, pos);
+                        var cell = Grid.Instantiate(CellPrefab, pos).GetComponent<CellBhv>();
+
+                        cell.Init(Random);
                     }
                 }
             }

@@ -74,6 +74,23 @@ public class CellGridBhv : MonoBehaviour
         }
     }
 
+    public Vector3[] Corners {
+        get
+        {
+            return new Vector3[8]
+            {
+                new Vector3(0, 0, 0),
+                new Vector3(XSize, 0, 0),
+                new Vector3(0, YSize, 0),
+                new Vector3(XSize, YSize, 0),
+                new Vector3(0, 0, ZSize),
+                new Vector3(XSize, 0, ZSize),
+                new Vector3(0, YSize, ZSize),
+                new Vector3(XSize, YSize, ZSize),
+            };
+        }
+    }
+
     public bool InRangeY(int y)
     {
         return y >= 0 && y < YSize;
