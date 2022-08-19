@@ -17,6 +17,8 @@ public class DirectionalLightBhv : MonoBehaviour
 
     float MaxRange = 0;
 
+    int CellIdx = 0;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -43,7 +45,43 @@ public class DirectionalLightBhv : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        TryStabLight();
+        IReadOnlyList<CellBhv> cells_list = Grid.RandomOrderedCells;
+        if (cells_list.Count == 0)
+            return;
+
+        for(int i = 0; i < 100; i++)
+        {
+            CellIdx++;
+
+            if (CellIdx >= cells_list.Count)
+            {
+                CellIdx = 0;
+            }
+
+            var cell = cells_list[CellIdx];
+
+            TryStabCell(cell);
+        }
+    }
+
+    private void TryStabCell(CellBhv cell)
+    {
+        var back_transformed = transform.InverseTransformPoint(cell.transform.position);
+
+        var stab_start = transform.TransformPoint(new Vector3(back_transformed.x, back_transformed.y, 0));
+        Ray ray = new Ray(stab_start, transform.forward);
+        RaycastHit hit;
+
+        if (Physics.Raycast(ray, out hit, MaxRange))
+        {
+            var hit_cell = hit.collider.GetComponent<CellBhv>();
+
+            if (hit_cell != null)
+            {
+                hit_cell.LightHit();
+                Debug.DrawLine(stab_start, hit.point, Color.green, 0.5f);
+            }
+        }
     }
 
     private void TryStabLight()

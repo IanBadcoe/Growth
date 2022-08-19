@@ -2,10 +2,21 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Assertions;
+using Util;
 
 public class CellGridBhv : MonoBehaviour
 {
     private CellBhv[,,] Cells;
+
+    private List<CellBhv> RandomCells = new List<CellBhv>();
+
+    public IReadOnlyList<CellBhv> RandomOrderedCells
+    {
+        get {
+            return RandomCells.AsReadOnly();
+        }
+    }
 
     public GameObject CellsContainer;
 
@@ -13,10 +24,18 @@ public class CellGridBhv : MonoBehaviour
     public int YSize;
     public int ZSize;
 
-    // Start is called before the first frame update
-    void Start()
-    {
+    ClRand Random {
+        get {
+            if (_rand == null)
+            {
+                _rand = new ClRand(RSeed);
+            }
+
+            return _rand;
+        }
     }
+    ClRand _rand;
+    public int RSeed = 1;
 
     public void Init()
     {
@@ -48,10 +67,16 @@ public class CellGridBhv : MonoBehaviour
             CellBhv old_content = this[pos];
             if (old_content != null)
             {
+                RandomCells.Remove(old_content);
                 Destroy(old_content);
             }
 
             Cells[pos.x, pos.y, pos.z] = value;
+
+            if (value != null)
+            {
+                RandomCells.Insert(Random.IntRange(0, RandomCells.Count + 1), value);
+            }
         }
     }
 
@@ -64,7 +89,13 @@ public class CellGridBhv : MonoBehaviour
 
     public GameObject Instantiate(GameObject prefab, Vector3Int pos)
     {
-        return Instantiate(prefab, pos, Quaternion.identity, CellsContainer.transform);
+        Assert.IsNotNull(prefab.GetComponent<CellBhv>());
+
+        GameObject go = Instantiate(prefab, pos, Quaternion.identity, CellsContainer.transform);
+
+        this[pos] = go.GetComponent<CellBhv>();
+
+        return go;
     }
 
     public Vector3Int Bounds
