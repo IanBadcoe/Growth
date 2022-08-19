@@ -3,9 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CellGrid : MonoBehaviour
+public class CellGridBhv : MonoBehaviour
 {
-    private Cell[,,] Cells;
+    private CellBhv[,,] Cells;
 
     public GameObject CellsContainer;
 
@@ -22,11 +22,11 @@ public class CellGrid : MonoBehaviour
     {
         if (Cells == null)
         {
-            Cells = new Cell[XSize, YSize, ZSize];
+            Cells = new CellBhv[XSize, YSize, ZSize];
         }
     }
 
-    public Cell this[Vector3Int pos]
+    public CellBhv this[Vector3Int pos]
     {
         get
         {
@@ -45,7 +45,7 @@ public class CellGrid : MonoBehaviour
                 throw new ArgumentOutOfRangeException("pos");
             }
 
-            Cell old_content = this[pos];
+            CellBhv old_content = this[pos];
             if (old_content != null)
             {
                 Destroy(old_content);

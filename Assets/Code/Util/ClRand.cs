@@ -274,7 +274,7 @@ namespace Util
             return Float() * (max - min) + min;
         }
 
-        public Vector3Int Cell(CellGrid grid)
+        public Vector3Int Cell(CellGridBhv grid)
         {
             var bounds = grid.Bounds;
 

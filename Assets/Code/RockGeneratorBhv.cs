@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using Util;
 
-public class RockGeneratorBehaviour : MonoBehaviour
+public class RockGeneratorBhv : MonoBehaviour
 {
-    public CellGrid Grid;
+    public CellGridBhv Grid;
     public GameObject CellPrefab;
 
     ClRand Random;
