@@ -73,10 +73,46 @@ public class CellGridBhv : MonoBehaviour
 
             Cells[pos.x, pos.y, pos.z] = value;
 
+            UpdateNeighbours(pos, value);
+
             if (value != null)
             {
                 RandomCells.Insert(Random.IntRange(0, RandomCells.Count + 1), value);
             }
+        }
+    }
+
+    private CellBhv RawNeighbour(Vector3Int pos, Neighbours.NeighbourDir dir)
+    {
+        Vector3Int n_pos = pos + dir.Offset();
+
+        return this[n_pos];
+    }
+
+    private void UpdateNeighbours(Vector3Int pos, CellBhv changed_cell)
+    {
+        // we cache "face neighbours"
+
+        // update references to this cell in any neighbours it has
+        // and vice-versa
+        UpdateNeighbour(changed_cell, RawNeighbour(pos, Neighbours.NeighbourDir.PlusX),  Neighbours.NeighbourDir.PlusX);
+        UpdateNeighbour(changed_cell, RawNeighbour(pos, Neighbours.NeighbourDir.MinusX), Neighbours.NeighbourDir.MinusX);
+        UpdateNeighbour(changed_cell, RawNeighbour(pos, Neighbours.NeighbourDir.PlusY),  Neighbours.NeighbourDir.PlusY);
+        UpdateNeighbour(changed_cell, RawNeighbour(pos, Neighbours.NeighbourDir.MinusY), Neighbours.NeighbourDir.MinusY);
+        UpdateNeighbour(changed_cell, RawNeighbour(pos, Neighbours.NeighbourDir.PlusZ),  Neighbours.NeighbourDir.PlusZ);
+        UpdateNeighbour(changed_cell, RawNeighbour(pos, Neighbours.NeighbourDir.MinusZ), Neighbours.NeighbourDir.MinusZ);
+    }
+
+    private void UpdateNeighbour(CellBhv cell_from, CellBhv cell_to, Neighbours.NeighbourDir dir)
+    {
+        if (cell_from != null)
+        {
+            cell_from.Neighbours[dir] = cell_to;
+        }
+
+        if (cell_to != null)
+        {
+            cell_to.Neighbours[dir.Reverse()] = cell_from;
         }
     }
 

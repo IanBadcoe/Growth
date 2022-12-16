@@ -18,27 +18,30 @@ public class RockGeneratorBhv : MonoBehaviour
 
         Grid.Init();
 
-        YZThickCol(0, 0, Grid.XSize, Random.IntRange(2, 7));
-        YZThickCol(0, Grid.ZSize - 1, Grid.XSize, Random.IntRange(2, 7));
-        YZThickCol(Grid.YSize - 1, 0, Grid.XSize, Random.IntRange(2, 7));
-        YZThickCol(Grid.YSize - 1, Grid.ZSize - 1, Grid.XSize, Random.IntRange(2, 7));
+        //YZThickCol(0, 0, Grid.XSize, Random.IntRange(2, 7));
+        //YZThickCol(0, Grid.ZSize - 1, Grid.XSize, Random.IntRange(2, 7));
+        //YZThickCol(Grid.YSize - 1, 0, Grid.XSize, Random.IntRange(2, 7));
+        //YZThickCol(Grid.YSize - 1, Grid.ZSize - 1, Grid.XSize, Random.IntRange(2, 7));
 
-        XZThickCol(0, 0, Grid.YSize, Random.IntRange(2, 7));
-        XZThickCol(0, Grid.ZSize - 1, Grid.YSize, Random.IntRange(2, 7));
-        XZThickCol(Grid.XSize - 1, 0, Grid.YSize, Random.IntRange(2, 7));
-        XZThickCol(Grid.XSize - 1, Grid.ZSize - 1, Grid.YSize, Random.IntRange(2, 7));
+        //XZThickCol(0, 0, Grid.YSize, Random.IntRange(2, 7));
+        //XZThickCol(0, Grid.ZSize - 1, Grid.YSize, Random.IntRange(2, 7));
+        //XZThickCol(Grid.XSize - 1, 0, Grid.YSize, Random.IntRange(2, 7));
+        //XZThickCol(Grid.XSize - 1, Grid.ZSize - 1, Grid.YSize, Random.IntRange(2, 7));
 
-        XYThickCol(0, 0, Grid.ZSize, Random.IntRange(2, 7));
-        XYThickCol(0, Grid.YSize - 1, Grid.ZSize, Random.IntRange(2, 7));
-        XYThickCol(Grid.XSize - 1, 0, Grid.ZSize, Random.IntRange(2, 7));
-        XYThickCol(Grid.XSize - 1, Grid.YSize - 1, Grid.ZSize, Random.IntRange(2, 7));
+        //XYThickCol(0, 0, Grid.ZSize, Random.IntRange(2, 7));
+        //XYThickCol(0, Grid.YSize - 1, Grid.ZSize, Random.IntRange(2, 7));
+        //XYThickCol(Grid.XSize - 1, 0, Grid.ZSize, Random.IntRange(2, 7));
+        //XYThickCol(Grid.XSize - 1, Grid.YSize - 1, Grid.ZSize, Random.IntRange(2, 7));
 
-        XPlane(0, Grid.YSize, Grid.ZSize);
-        ZPlane(0, Grid.XSize, Grid.YSize);
+        //XPlane(0, Grid.YSize, Grid.ZSize);
+        //ZPlane(0, Grid.XSize, Grid.YSize);
 
-        Hill(0, Grid.XSize, 0, Grid.ZSize, 0, 10, 0.5f, 0.75f);
+        //Hill(0, Grid.XSize, 0, Grid.ZSize, 0, 10, 0.5f, 0.75f);
 
-        Hill(Grid.XSize * 6 / 10, Grid.XSize * 8 / 10, Grid.ZSize * 2 / 10, Grid.ZSize * 4 / 10, 1, 5, 0.9f, 1.0f);
+        //Hill(Grid.XSize * 6 / 10, Grid.XSize * 8 / 10, Grid.ZSize * 2 / 10, Grid.ZSize * 4 / 10, 1, 5, 0.9f, 1.0f);
+
+        FillBox(3, 6, 4, 5, 1, 4);
+        FillBox(3, 5, 5, 6, 2, 3);
     }
 
     private void Hill(

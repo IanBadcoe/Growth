@@ -280,7 +280,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 784111608490138800, guid: 17e9dd2de7ac34a42a5e21409c166bf2, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 784111608490138800, guid: 17e9dd2de7ac34a42a5e21409c166bf2, type: 3}
       propertyPath: m_LocalPosition.y
@@ -360,7 +360,7 @@ PrefabInstance:
       objectReference: {fileID: 1607595046}
     - target: {fileID: 575222966531908918, guid: 44f893a1be170d54bae7698027ca0fe8, type: 3}
       propertyPath: AngularVelocity
-      value: 0.005
+      value: 0.01
       objectReference: {fileID: 0}
     - target: {fileID: 5337010238932844326, guid: 44f893a1be170d54bae7698027ca0fe8, type: 3}
       propertyPath: m_Name

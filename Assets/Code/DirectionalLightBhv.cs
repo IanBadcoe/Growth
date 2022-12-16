@@ -23,7 +23,9 @@ public class DirectionalLightBhv : MonoBehaviour
     readonly float Distance = 1000;
     readonly float YDist;
     readonly float XZDist;
+
     public float AngularVelocity = 0.05f;
+    public float CellStabs = 20;
 
     DirectionalLightBhv()
     {
@@ -76,7 +78,7 @@ public class DirectionalLightBhv : MonoBehaviour
         if (cells_list.Count == 0)
             return;
 
-        for(int i = 0; i < 100; i++)
+        for(int i = 0; i < Mathf.Min(100, cells_list.Count); i++)
         {
             CellIdx++;
 
@@ -87,7 +89,7 @@ public class DirectionalLightBhv : MonoBehaviour
 
             var cell = cells_list[CellIdx];
 
-            TryStabCell(cell);
+            TryCellStabs(cell);
         }
 
         Heading += AngularVelocity * Time.deltaTime;
@@ -103,9 +105,40 @@ public class DirectionalLightBhv : MonoBehaviour
         UpdatePosition();
     }
 
-    private void TryStabCell(CellBhv cell)
+    private void TryCellStabs(CellBhv cell)
     {
-        var back_transformed = transform.InverseTransformPoint(cell.transform.position);
+        int num_points = cell.FacesPointCount();
+
+        if (num_points == 0)
+            return;
+
+        float stab_prob = (float)CellStabs / (float)num_points;
+
+        float hits = 0;
+        float attempts = 0;
+
+        foreach(Vector3 pos in cell.FacesPointSequence())
+        {
+            if (Random.FloatRange(0, 1) < stab_prob)
+            {
+                attempts += 1;
+
+                if (TryStabPoint(pos, cell)) {
+                    hits += 1;
+                }
+            }
+        }
+
+        if (attempts > 1)
+        {
+            cell.SetLight(hits / attempts);
+        }
+    }
+
+
+    private bool TryStabPoint(Vector3 pos, CellBhv cell)
+    {
+        var back_transformed = transform.InverseTransformPoint(pos);
 
         var stab_start = transform.TransformPoint(new Vector3(back_transformed.x, back_transformed.y, 0));
         Ray ray = new Ray(stab_start, transform.forward);
@@ -115,38 +148,14 @@ public class DirectionalLightBhv : MonoBehaviour
         {
             var hit_cell = hit.collider.GetComponent<CellBhv>();
 
-            if (hit_cell != null)
+            if (hit_cell == cell)
             {
-                hit_cell.LightHit();
                 Debug.DrawLine(stab_start, hit.point, Color.green, 0.5f);
+
+                return true;
             }
         }
-    }
 
-    private void TryStabLight()
-    {
-        float xoffset = Random.FloatRange(StabXMin, StabXMax);
-        float yoffset = Random.FloatRange(StabYMin, StabYMax);
-
-        Vector3 stab_start = transform.TransformPoint(new Vector3(xoffset, yoffset, 0));
-        //        Vector3 stab_end = stab_start + transform.forward * MaxRange;
-
-        Ray ray = new Ray(stab_start, transform.forward);
-
-        RaycastHit hit;
-        if (Physics.Raycast(ray, out hit, MaxRange))
-        {
-            var cell = hit.collider.GetComponent<CellBhv>();
-
-            if (cell != null)
-            {
-                cell.LightHit();
-            }
-            //Debug.DrawLine(stab_start, hit.point, Color.green, 0.5f);
-        }
-        //else
-        //{
-        //    Debug.DrawLine(stab_start, stab_start + transform.forward * MaxRange * 2, Color.red, 0.5f);
-        //}
+        return false;
     }
 }
