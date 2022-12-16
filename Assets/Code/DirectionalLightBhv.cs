@@ -19,13 +19,24 @@ public class DirectionalLightBhv : MonoBehaviour
 
     int CellIdx = 0;
 
+    float Heading = 0;
+    readonly float Distance = 1000;
+    readonly float YDist;
+    readonly float XZDist;
+    public float AngularVelocity = 0.05f;
+
+    DirectionalLightBhv()
+    {
+        YDist = Mathf.Sqrt(Distance * Distance / 3);
+        XZDist = Mathf.Sqrt(Distance * Distance - YDist * YDist);
+    }
+
     // Start is called before the first frame update
     void Start()
     {
         Random = new ClRand(RSeed);
 
-        transform.position = new Vector3(Grid.XSize * 2, Grid.YSize * 2, Grid.ZSize * 2);
-        transform.LookAt(new Vector3(0, 0, 0));
+        UpdatePosition();
 
         Vector3[] corners = Grid.Corners;
 
@@ -40,6 +51,22 @@ public class DirectionalLightBhv : MonoBehaviour
 
             MaxRange = Mathf.Max(MaxRange, transformed.z);
         }
+    }
+
+    private void UpdatePosition()
+    {
+        float sk = Mathf.Sin(Heading);
+        float ck = Mathf.Cos(Heading);
+
+        Vector3 centre = new Vector3(0, 0, 0);
+
+        var pos = centre + new Vector3(
+            XZDist * sk,
+            YDist,
+            XZDist * ck);
+
+        transform.position = pos;
+        transform.LookAt(centre);
     }
 
     // Update is called once per frame
@@ -62,6 +89,18 @@ public class DirectionalLightBhv : MonoBehaviour
 
             TryStabCell(cell);
         }
+
+        Heading += AngularVelocity * Time.deltaTime;
+        if (Heading > Mathf.PI * 2)
+        {
+            Heading -= Mathf.PI * 2;
+        }
+        else if ( Heading < 0)
+        {
+            Heading += Mathf.PI * 2;
+        }
+
+        UpdatePosition();
     }
 
     private void TryStabCell(CellBhv cell)

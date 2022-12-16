@@ -358,6 +358,10 @@ PrefabInstance:
       propertyPath: Grid
       value: 
       objectReference: {fileID: 1607595046}
+    - target: {fileID: 575222966531908918, guid: 44f893a1be170d54bae7698027ca0fe8, type: 3}
+      propertyPath: AngularVelocity
+      value: 0.005
+      objectReference: {fileID: 0}
     - target: {fileID: 5337010238932844326, guid: 44f893a1be170d54bae7698027ca0fe8, type: 3}
       propertyPath: m_Name
       value: Directional Light
