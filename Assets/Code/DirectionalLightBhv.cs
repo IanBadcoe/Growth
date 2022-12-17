@@ -80,16 +80,19 @@ public class DirectionalLightBhv : MonoBehaviour
 
         for(int i = 0; i < Mathf.Min(100, cells_list.Count); i++)
         {
+            var cell = cells_list[CellIdx];
+
+            if (cell.GatherLight)
+            {
+                TryCellStabs(cell);
+            }
+
             CellIdx++;
 
             if (CellIdx >= cells_list.Count)
             {
                 CellIdx = 0;
             }
-
-            var cell = cells_list[CellIdx];
-
-            TryCellStabs(cell);
         }
 
         Heading += AngularVelocity * Time.deltaTime;
@@ -107,7 +110,7 @@ public class DirectionalLightBhv : MonoBehaviour
 
     private void TryCellStabs(CellBhv cell)
     {
-        int num_points = cell.FacesPointCount();
+        int num_points = cell.FacesPointCount(transform.position);
 
         if (num_points == 0)
             return;
@@ -117,7 +120,7 @@ public class DirectionalLightBhv : MonoBehaviour
         float hits = 0;
         float attempts = 0;
 
-        foreach(Vector3 pos in cell.FacesPointSequence())
+        foreach(Vector3 pos in cell.FacesPointSequence(transform.position))
         {
             if (Random.FloatRange(0, 1) < stab_prob)
             {
@@ -144,18 +147,24 @@ public class DirectionalLightBhv : MonoBehaviour
         Ray ray = new Ray(stab_start, transform.forward);
         RaycastHit hit;
 
+        Color col = Color.red;
+        Vector3 draw_end = stab_start + transform.forward * Distance * 1.2f;
+        bool ret = false;
+
         if (Physics.Raycast(ray, out hit, MaxRange))
         {
             var hit_cell = hit.collider.GetComponent<CellBhv>();
 
             if (hit_cell == cell)
             {
-                Debug.DrawLine(stab_start, hit.point, Color.green, 0.5f);
-
-                return true;
+                ret = true;
+                col = Color.green;
+                draw_end = hit.point;
             }
         }
 
-        return false;
+        Debug.DrawLine(stab_start, draw_end, col, 0.5f);
+
+        return ret;
     }
 }

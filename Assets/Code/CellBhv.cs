@@ -79,6 +79,8 @@ public class CellBhv : MonoBehaviour
 
     public readonly Neighbours Neighbours = new Neighbours();
 
+    public bool GatherLight = true;
+
     private void Start()
     {
         if (Materials == null) {
@@ -160,14 +162,15 @@ public class CellBhv : MonoBehaviour
         new Vector2(0.956672f, 0.004360f),
     };
 
-    public int FacesPointCount()
+    public int FacesPointCount(Vector3 light_point)
     {
         int ret = 0;
 
         // do not consider faces which are burried against a neighbour
+        // or those facing away from the light...
         foreach(var dir in Neighbours.All())
         {
-            if (Neighbours[dir] == null)
+            if (Neighbours[dir] == null && FaceFacesPoint(dir, light_point))
             {
                 ret += FacePoints.Length;
             }
@@ -176,11 +179,34 @@ public class CellBhv : MonoBehaviour
         return ret;
     }
 
-    public IEnumerable<Vector3> FacesPointSequence()
+    private bool FaceFacesPoint(Neighbours.NeighbourDir dir, Vector3 point)
+    {
+        // the light has to be further out than the face to shine on it
+        // and the face is +/- 0.5 from our centre...
+        switch(dir)
+        {
+            case Neighbours.NeighbourDir.PlusX:
+                return point.x > transform.position.x + 0.5f;
+            case Neighbours.NeighbourDir.PlusY:
+                return point.y > transform.position.y + 0.5f;
+            case Neighbours.NeighbourDir.PlusZ:
+                return point.z > transform.position.z + 0.5f;
+            case Neighbours.NeighbourDir.MinusX:
+                return point.x < transform.position.x - 0.5f;
+            case Neighbours.NeighbourDir.MinusY:
+                return point.y < transform.position.y - 0.5f;
+            case Neighbours.NeighbourDir.MinusZ:
+                return point.z < transform.position.z - 0.5f;
+        }
+
+        throw new Exception("What direction is that?");
+    }
+
+    public IEnumerable<Vector3> FacesPointSequence(Vector3 light_point)
     {
         foreach (var dir in Neighbours.All())
         {
-            if (Neighbours[dir] != null)
+            if (Neighbours[dir] == null && FaceFacesPoint(dir, light_point))
             {
                 foreach(Vector3 ret in FacePointSequence(dir))
                 {
@@ -194,11 +220,11 @@ public class CellBhv : MonoBehaviour
     {
         foreach(var p in FacePoints)
         {
-            yield return TransformInFace(p, dir);
+            yield return TransformIntoFace(p, dir);
         }
     }
 
-    private Vector3 TransformInFace(Vector2 p, Neighbours.NeighbourDir dir)
+    private Vector3 TransformIntoFace(Vector2 p, Neighbours.NeighbourDir dir)
     {
         var f_p = ToInFaceCoords(p, dir);
 
