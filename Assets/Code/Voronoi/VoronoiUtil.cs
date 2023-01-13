@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -36,6 +37,7 @@ namespace Assets.Code.Voronoi
     //    IReadOnlyList<Vector3> Points { get; }
     //}
 
+    [DebuggerDisplay("({X}, {Y}, {Z})")]
     public class Vec3
     {
         public Vec3(float x, float y, float z)
@@ -93,6 +95,31 @@ namespace Assets.Code.Voronoi
         }
     }
 
+    public class Triangle
+    {
+        public Triangle(Vec3 p1, Vec3 p2, Vec3 p3)
+        {
+            V1 = p1;
+            V2 = p2;
+            V3 = p3;
+        }
+
+        public readonly Vec3 V1;
+        public readonly Vec3 V2;
+        public readonly Vec3 V3;
+
+        public IEnumerable<Vec3> Verts
+        {
+            get
+            {
+                yield return V1;
+                yield return V2;
+                yield return V3;
+            }
+        }
+    }
+
+    [DebuggerDisplay("(({Points[0].X}, {Points[0].Y}, {Points[0].Z}) ({Points[1].X}, {Points[1].Y}, {Points[1].Z}) ({Points[2].X}, {Points[2].Y}, {Points[2].Z}) ({Points[3].X}, {Points[3].Y}, {Points[3].Z}))")]
     public class DTetrahedron
     {
         public DTetrahedron(Vec3 p0, Vec3 p1, Vec3 p2, Vec3 p3)
@@ -146,35 +173,108 @@ namespace Assets.Code.Voronoi
         {
             return Sphere.Valid;
         }
+
+        public IEnumerable<Triangle> Faces
+        {
+            get
+            {
+                // trying to get these rotating the same way
+                // but at the moment it doesn't matter
+                yield return new Triangle(Points[0], Points[1], Points[2]);
+                yield return new Triangle(Points[0], Points[3], Points[1]);
+                yield return new Triangle(Points[0], Points[2], Points[3]);
+                yield return new Triangle(Points[2], Points[1], Points[3]);
+            }
+        }
     }
 
     // a polyhedron made of triangles
-    public class PolyTriangle
+    public class TriangularPolyhedron
     {
-        struct TriIndex
+        [DebuggerDisplay("({I1},{I2},{I3})")]
+        public struct TriIndex : IEquatable<TriIndex>
         {
-            int i1;
-            int i2;
-            int i3;
+            public TriIndex(int i1, int i2, int i3)
+            {
+                I1 = i1;
+                I2 = i2;
+                I3 = i3;
+            }
+
+            public readonly int I1;
+            public readonly int I2;
+            public readonly int I3;
+
+            public IEnumerable<int> Indices
+            {
+                get
+                {
+                    yield return I1;
+                    yield return I2;
+                    yield return I3;
+                }
+            }
+
+            public bool Equals(TriIndex other)
+            {
+                return Indices.Contains(other.I1)
+                    && Indices.Contains(other.I2)
+                    && Indices.Contains(other.I3);
+            }
         }
 
-        List<TriIndex> Faces;
-        List<Vec3> Points;
+        public readonly List<TriIndex> Faces = new List<TriIndex>();
+        public IEnumerable<Triangle> TriFaces
+        {
+            get
+            {
+                return Faces.Select(f => new Triangle(Verts[f.I1], Verts[f.I2], Verts[f.I3]));
+            }
+        }
+        public readonly List<Vec3> Verts = new List<Vec3>();
 
-        public PolyTriangle(List<DTetrahedron> tets)
+        public TriangularPolyhedron(List<DTetrahedron> tets)
         {
             foreach(var tet in tets)
             {
-                foreach(var p in tet.Points)
-                {
-                    if (!Points.Contains(p))
-                    {
-                        Points.Add(p);
+                AddTetrahedron(tet);
+            }
+        }
 
-                        // @@
-                    }
+        public void AddTetrahedron(DTetrahedron tet)
+        {
+            foreach (var f in tet.Faces)
+            {
+                var vert_idxs = f.Verts.Select(vert_idxs => AddFindVert(vert_idxs)).ToArray();
+
+                var tri = new TriIndex(vert_idxs[0], vert_idxs[1], vert_idxs[2]);
+
+                // we build ourselves from tets, when a tet we already saw contains the same face
+                // as one being added, it means that is becoming an internal face between two tets
+                // and we do not want it...
+                if (Faces.Contains(tri))
+                {
+                    Faces.Remove(tri);
+                }
+                else
+                {
+                    Faces.Add(tri);
                 }
             }
+        }
+
+        public int AddFindVert(Vec3 v)
+        {
+            int idx = Verts.IndexOf(v);
+
+            if (idx != -1)
+            {
+                return idx;
+            }
+
+            Verts.Add(v);
+
+            return Verts.Count - 1;
         }
     }
 
@@ -202,22 +302,9 @@ namespace Assets.Code.Voronoi
 
         public IReadOnlyList<DTetrahedron> Tets { get { return TetsRW; } }
         public IEnumerable<Vec3> Points { get { return Tets.SelectMany(x => x.Points).Distinct(); } }
-        //public DTetrahedron[] TetNeighbours(DTetrahedron tet)
-        //{
-        //    throw new NotImplementedException();
-        //}
 
         public void AddTet(DTetrahedron tet)
         {
-            //List<DTetrahedron> neighbs = new List<DTetrahedron>();
-
-            //foreach(var other in Tets)
-            //{
-            //    if (other.Adjoins(tet) == DTetrahedron.AdjoinsResult.Face)
-            //    {
-            //        neighbs.Append(other);
-            //    }
-            //}
             TetsRW.Add(tet);
         }
 
@@ -246,7 +333,19 @@ namespace Assets.Code.Voronoi
         {
             var bad_tets = Tets.Where(tet => tet.Sphere.Contains(v, Tolerance)).ToList();
 
-            var pt = new PolyTriangle(bad_tets);
+            var pt = new TriangularPolyhedron(bad_tets);
+
+            foreach(var tet in bad_tets)
+            {
+                TetsRW.Remove(tet);
+            }
+
+            foreach(var tri in pt.TriFaces)
+            {
+                var tet = new DTetrahedron(v, tri.V1, tri.V2, tri.V3);
+
+                AddTet(tet);
+            }
         }
     }
 
@@ -285,6 +384,8 @@ namespace Assets.Code.Voronoi
                 var v = new Vec3(p);
 
                 d.AddPoint(v);
+
+                UnityEngine.Debug.Assert(d.Validate());
             }
 
             return d;
