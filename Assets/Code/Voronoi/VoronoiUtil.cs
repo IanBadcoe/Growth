@@ -186,6 +186,11 @@ namespace Assets.Code.Voronoi
                 yield return new Triangle(Points[2], Points[1], Points[3]);
             }
         }
+
+        internal bool UsesPoint(Vec3 p)
+        {
+            return Points.Contains(p);
+        }
     }
 
     // a polyhedron made of triangles
@@ -298,8 +303,6 @@ namespace Assets.Code.Voronoi
 
         List<DTetrahedron> TetsRW { get; }
 
-        Dictionary<DTetrahedron, List<DTetrahedron>> Neighbours;
-
         public IReadOnlyList<DTetrahedron> Tets { get { return TetsRW; } }
         public IEnumerable<Vec3> Points { get { return Tets.SelectMany(x => x.Points).Distinct(); } }
 
@@ -347,46 +350,60 @@ namespace Assets.Code.Voronoi
                 AddTet(tet);
             }
         }
+
+        internal void AddInitialPoints(Vector3[] points)
+        {
+            Bounds b = new Bounds();
+
+            foreach (var p in points)
+            {
+                b.Encapsulate(p);
+            }
+
+            // build an encapsulating cube, using whichever axis is longest, and padding by 1 on each dimension
+            Vec3 c0 = new Vec3(b.min.x - 1, b.min.y - 1, b.min.z - 1);
+            float size = Mathf.Max(b.size.x, b.size.y, b.size.z) + 2;
+
+            // a right-angled prism which contains that box has its corners on the axes at 3x the
+            // box dimensions
+            var c1 = c0 + new Vec3(size * 3, 0, 0);
+            var c2 = c0 + new Vec3(0, size * 3, 0);
+            var c3 = c0 + new Vec3(0, 0, size * 3);
+
+            var bounding_tet = new DTetrahedron(c0, c1, c2, c3);
+            System.Diagnostics.Debug.Assert(bounding_tet.Validate());
+
+            AddTet(bounding_tet);
+
+            System.Diagnostics.Debug.Assert(Validate());
+
+            foreach (var p in points)
+            {
+                var v = new Vec3(p);
+
+                AddPoint(v);
+
+                UnityEngine.Debug.Assert(Validate());
+            }
+
+            var initial_point_tets = Tets.Where(x => x.UsesPoint(c0) || x.UsesPoint(c1) || x.UsesPoint(c2) || x.UsesPoint(c3)).ToList();
+
+            TetsRW.RemoveAll(tet => initial_point_tets.Contains(tet));
+
+            UnityEngine.Debug.Assert(!Points.Contains(c0));
+            UnityEngine.Debug.Assert(!Points.Contains(c1));
+            UnityEngine.Debug.Assert(!Points.Contains(c2));
+            UnityEngine.Debug.Assert(!Points.Contains(c3));
+        }
     }
 
     public class VoronoiUtil
     {
         public Delauney CreateDelauney(Vector3[] points)
         {
-            Bounds b = new Bounds();
-
-            foreach(var p in points)
-            {
-                b.Encapsulate(p);
-            }
-
-            // build an encapsulating cube, using whichever axis is longest, and padding by 1 on each dimension
-            Vec3 low_corner = new Vec3(b.min.x - 1, b.min.y - 1, b.min.z - 1);
-            float size = Mathf.Max(b.size.x, b.size.y, b.size.z) + 2;
-
-            // a right-angled prism which contains that box has its corners on the axes at 3x the
-            // box dimensions
-            // c0 is low_corner
-            var c1 = low_corner + new Vec3(size * 3, 0, 0);
-            var c2 = low_corner + new Vec3(0, size * 3, 0);
-            var c3 = low_corner + new Vec3(0, 0, size * 3);
-
-            var bounding_tet = new DTetrahedron(low_corner, c1, c2, c3);
-            System.Diagnostics.Debug.Assert(bounding_tet.Validate());
-
             var d = new Delauney(1e-3f);
-            d.AddTet(bounding_tet);
 
-            System.Diagnostics.Debug.Assert(d.Validate());
-
-            foreach(var p in points)
-            {
-                var v = new Vec3(p);
-
-                d.AddPoint(v);
-
-                UnityEngine.Debug.Assert(d.Validate());
-            }
+            d.AddInitialPoints(points);
 
             return d;
         }
