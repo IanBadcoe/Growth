@@ -11,7 +11,7 @@ namespace Assets.Code
         {
             Voronoi.VoronoiUtil vu = new Voronoi.VoronoiUtil();
 
-            vu.CreateDelauney(new Vector3[]
+            vu.CreateDelaunay(new Vector3[]
             {
                 new Vector3 (0, 0, 0),
                 new Vector3 (1, 0, 0),
