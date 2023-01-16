@@ -1,0 +1,91 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2205858902139443525
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6456400201513774688}
+  m_Layer: 0
+  m_Name: MeshContainer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6456400201513774688
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2205858902139443525}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6960108125073814809}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &6712976757571184959
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6960108125073814809}
+  - component: {fileID: 7580067306166847451}
+  m_Layer: 0
+  m_Name: VoronoiGenerator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6960108125073814809
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6712976757571184959}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 6456400201513774688}
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7580067306166847451
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6712976757571184959}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7ea688c792da3b44863ca7da6781228, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MeshContainer: {fileID: 2205858902139443525}
+  MeshTemplate: {fileID: 2854676176631705337, guid: 13d7f17b8bdff1540a76648c28d5a6b4, type: 3}
+  Materials:
+  - {fileID: 2100000, guid: 59e19fb8846eed4419996cecf32b8ced, type: 2}
+  - {fileID: 2100000, guid: 45933346ef847d3438af8f4cc3c8f3b7, type: 2}
+  - {fileID: 2100000, guid: 15221633990462848a48134e34a754b1, type: 2}
+  - {fileID: 2100000, guid: ada3b8a0415347a4b85a3691ee8360d2, type: 2}
+  - {fileID: 2100000, guid: d5bed878bc449b44c8ae52224e7f6cc4, type: 2}
+  - {fileID: 2100000, guid: 9aa0a37aeff04694fa9d62599e6dd33f, type: 2}
+  - {fileID: 2100000, guid: c025b4ef2f3038a42b3451ab049e9e39, type: 2}
+  - {fileID: 2100000, guid: 5e38fb391fd995f42a8002294591654e, type: 2}
+  - {fileID: 2100000, guid: 630abf2a6da8e4f4b9513fc26613cfb6, type: 2}
+  - {fileID: 2100000, guid: 435d8b5018c61fd4a9c26dabafe7afa6, type: 2}

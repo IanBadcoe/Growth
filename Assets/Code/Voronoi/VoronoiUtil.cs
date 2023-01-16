@@ -8,41 +8,264 @@ using UnityEngine;
 
 namespace Assets.Code.Voronoi
 {
-    //public class VPolyhedron
-    //{
-    //    IReadOnlyList<Face> Faces { get; }
-    //    IReadOnlyList<Vert> Verts { get; }
-    //    IReadOnlyList<CircumSphere> Spheres { get; }
-    //    IReadOnlyList<VPolyhedron> Heighbours { get; }
-
-    //    Vector3 Vert { get; }
-    //}
-
-    //public class Face
-    //{
-
-    //}
-
-    //public class Vert
-    //{
-
-    //}
-
-    public interface IVoronoi
+    public interface IVPolyhedron
     {
-        //IReadOnlyList<Face> Faces { get; }
-        //IReadOnlyList<Vert> Verts { get; }
-        //IReadOnlyList<CircumSphere> Spheres { get; }
-        //IReadOnlyList<VPolyhedron> Regions { get; }
-        //IReadOnlyList<Vector3> Verts { get; }
+        IReadOnlyList<Face> Faces { get; }
+        IReadOnlyList<Vec3> Verts { get; }
+        Vec3 Centre { get; }
     }
 
+    [DebuggerDisplay("Faces: {Faces.Count} Verts {Verts.Count}")]
+    public class VPolyhedron : IVPolyhedron
+    {
+        public VPolyhedron(Vec3 centre)
+        {
+            Centre = centre;
+            FacesRW = new List<Face>();
+        }
+
+        List<Face> FacesRW;
+
+        public IReadOnlyList<Face> Faces => FacesRW;
+        public IReadOnlyList<Vec3> Verts => Faces.SelectMany(f => f.Verts).Distinct().ToList();
+        public Vec3 Centre { get; }
+
+        public void AddFace(Face face)
+        {
+            switch (face.CalcRotationDirection(Centre))
+            {
+                case Face.RotationDirection.Clockwise:
+                    FacesRW.Add(face);
+                    break;
+
+                case Face.RotationDirection.Anticlockwise:
+                    FacesRW.Add(face.Reversed());
+                    break;
+
+                case Face.RotationDirection.Indeterminate:
+                    UnityEngine.Debug.Assert(false);
+                    break;
+            }
+        }
+    }
+
+    [DebuggerDisplay("Verts: {Verts.Count}")]
+    public class Face
+    {
+        public Face(List<Vec3> verts)
+        {
+            Verts = verts;
+        }
+
+        public IReadOnlyList<Vec3> Verts;
+
+        public enum RotationDirection
+        {
+            Clockwise,
+            Anticlockwise,
+            Indeterminate
+        }
+
+        public RotationDirection CalcRotationDirection(Vec3 from_centre)
+        {
+            var prev = Verts.Last();
+
+            Vec3 accum = new Vec3();
+            foreach(var v in Verts)
+            {
+                accum += prev.Cross(v);
+
+                prev = v;
+            }
+
+            // accum is normal to the face such that viewing _down_ it the face looks anticlockwise
+
+            // so if we get the projection on to that of a vector from our centre to any point in the face
+            // that will be -ve for anticlockwise, positive for clockwise and close to zero if something is wrong
+            // like a degenerate face or the centre being in the plane of the face
+            var prod = (Verts.First() - from_centre).Dot(accum);
+
+            if (prod > 1e-6f)
+            {
+                return RotationDirection.Clockwise;
+            }
+
+            if (prod < -1e-6f)
+            {
+                return RotationDirection.Anticlockwise;
+            }
+
+            return RotationDirection.Indeterminate;
+        }
+
+        internal Face Reversed()
+        {
+            return new Face(Verts.Reverse().ToList());
+        }
+    }
+
+    public interface IPolyhedronSet
+    {
+        IReadOnlyList<IVPolyhedron> Polyhedrons { get; }
+    }
+
+    public interface IVoronoi : IPolyhedronSet
+    {
+        IEnumerable<Face> Faces { get; }
+        IEnumerable<Vec3> Verts { get; }
+        IDelaunay Delaunay { get; }
+        float Tolerance { get; }
+    }
+
+    [DebuggerDisplay("Regions: {Regions.Count}")]
     public class Voronoi : IVoronoi
     {
-        internal void InitialiseFromBoundedDelaunay(IDelaunay d)
+        public Voronoi()
         {
-            foreach (var v in d.Verts)
-            { }
+            RegionsRW = new Dictionary<Vec3, VPolyhedron>();
+        }
+
+        #region IVoronoi
+        public IEnumerable<Face> Faces => Polyhedrons.SelectMany(reg => reg.Faces).Distinct();
+        public IEnumerable<Vec3> Verts => Polyhedrons.SelectMany(reg => reg.Verts).Distinct();
+        public IReadOnlyList<IVPolyhedron> Polyhedrons => RegionsRW.Values.ToList();
+        public IReadOnlyList<IVPolyhedron> VPolyhedrons => RegionsRW.Values.ToList();
+        public IDelaunay Delaunay { get; set; }
+        public float Tolerance => Delaunay.Tolerance;
+        #endregion
+
+        Dictionary<Vec3, VPolyhedron> RegionsRW;
+
+        struct Edge : IEquatable<Edge>
+        {
+            public Edge(Vec3 a, Vec3 b)
+            {
+                // we do this so that whatever order we fould the verts in
+                // the line is trivially comparible
+                if (a.IsBefore(b))
+                {
+                    V1 = a;
+                    V2 = b;
+                }
+                else
+                {
+                    V1 = b;
+                    V2 = a;
+                }
+            }
+
+            public readonly Vec3 V1;
+            public readonly Vec3 V2;
+
+            public bool Equals(Edge other)
+            {
+                return V1 == other.V1 && V2 == other.V2;
+            }
+
+            public override int GetHashCode()
+            {
+                return V1.GetHashCode() ^ (31 * V2.GetHashCode());
+            }
+        }
+
+        public void InitialiseFromBoundedDelaunay(IDelaunay d)
+        {
+            Delaunay = d;
+
+            HashSet<Edge> done = new HashSet<Edge>();
+
+            foreach (var v1 in d.Verts)
+            {
+                // not interested in trying to find polyhedra for the verts we added just to make a bound...
+                if (d.GetVertTags(v1).Contains("bound"))
+                {
+                    continue;
+                }
+
+                // the verts which neighbour v are all the ones used in tets which also use this vert
+                // omitting this v itself
+                //
+                // relying on reference identity/hash for "Distinct" because we do not ever use duplicated verts...
+                var neighboring_verts = d.Tets.Where(tet => tet.UsesVert(v1)).SelectMany(tet => tet.Verts).Distinct().Where(v => v != v1).ToList();
+
+                foreach(var v2 in neighboring_verts)
+                {
+                    var edge = new Edge(v1, v2);
+                    if (done.Contains(edge))
+                    {
+                        continue;
+                    }
+
+                    done.Add(edge);
+
+                    // find all the tets that use this edge
+                    var edge_tets = d.Tets.Where(tet => tet.UsesVert(v1) && tet.UsesVert(v2)).ToList();
+
+                    var face_verts = new List<Vec3>();
+
+                    var current_tet = edge_tets[0];
+
+                    // get any one other vert of this tet, this indicates the direction we are
+                    // "coming from"
+                    var v_from = current_tet.Verts.Where(v => v != v1 && v != v2).First();
+
+                    do
+                    {
+                        edge_tets.Remove(current_tet);
+
+                        face_verts.Add(current_tet.Sphere.Centre);
+
+                        // the remaining local vert when we strike off the two common to the edge and the one we came from
+                        var v_towards = current_tet.Verts.Where(v => v != v1 && v != v2 && v != v_from).First();
+
+                        // we move to the tet which shares this face with us...
+                        var tet_next = edge_tets.Where(tet => tet.UsesVert(v1) && tet.UsesVert(v2) && tet.UsesVert(v_towards)).FirstOrDefault();
+
+                        current_tet = tet_next;
+
+                        // when we move on, we will be moving off using 
+                        v_from = v_towards;
+                    }
+                    while (current_tet != null);
+
+                    // could, here, eliminate any face_verts which are identical (or withing a tolerance) of the previous
+                    // but (i) with randomized seed data we do not expect that to happen much and (ii) all ignoring this does is add degenerate
+                    // polys/edges to the output, which I do not think will be a problem at the moment
+
+                    // if it does become a problem, probably handle it by AddFind'ing all verts into a set stored on this Voronoi
+                    // and then using the resulting indices to eliminate duplicates, before looking up the actual coords
+                    // as this should yield the same results no matter what poly we are testing and/or what order its verts are in
+
+                    // if we do that, then input points (d.Verts) which are neighbours become such by virtue of still having
+                    // a common face after this process, NOT because the Delaunay said they were (e.g. they are technically Delaunay-neighbours
+                    // but the contact polygon is of negligeable area so the neighbour-ness can be ignored, it is only as if the
+                    // two points were minutely further apart in the first place...)
+
+                    Face face = new Face(face_verts);
+
+                    VPolyhedron v1_poly;
+                    VPolyhedron v2_poly;
+
+                    if (!RegionsRW.TryGetValue(v1, out v1_poly))
+                    {
+                        v1_poly = new VPolyhedron(v1);
+                        RegionsRW[v1] = v1_poly;
+                    }
+
+                    v1_poly.AddFace(face);
+
+                    // if v2 is a vert we want a poly for (non-bound) then this face belongs to that too...
+                    if (!d.GetVertTags(v2).Contains("bound"))
+                    {
+                        if (!RegionsRW.TryGetValue(v2, out v2_poly))
+                        {
+                            v2_poly = new VPolyhedron(v2);
+                            RegionsRW[v2] = v2_poly;
+                        }
+
+                        v2_poly.AddFace(face);
+                    }                }
+            }
         }
     }
 
@@ -63,6 +286,11 @@ namespace Assets.Code.Voronoi
             Z = p.z;
         }
 
+        public Vec3()
+        {
+            X = Y = Z = 0;
+        }
+
         public readonly float X;
         public readonly float Y;
         public readonly float Z;
@@ -71,16 +299,75 @@ namespace Assets.Code.Voronoi
         {
             return new Vec3(lhs.X + rhs.X, lhs.Y + rhs.Y, lhs.Z + rhs.Z);
         }
+
         public static Vec3 operator -(Vec3 lhs, Vec3 rhs)
         {
             return new Vec3(lhs.X - rhs.X, lhs.Y - rhs.Y, lhs.Z - rhs.Z);
         }
+
+        public static Vec3 operator *(Vec3 lhs, float rhs)
+        {
+            return new Vec3(lhs.X * rhs, lhs.Y * rhs, lhs.Z * rhs);
+        }
+
         public float Size2()
         {
             return X * X + Y * Y + Z * Z;
         }
+
+        public bool IsBefore(Vec3 other)
+        {
+            if (X < other.X)
+            {
+                return true;
+            }
+            else if (X > other.X)
+            {
+                return false;
+            }
+
+            if (Y < other.Y)
+            {
+                return true;
+            }
+            else if (Y > other.Y)
+            {
+                return false;
+            }
+
+            if (Z < other.Z)
+            {
+                return true;
+            }
+            else if (Z > other.Z)
+            {
+                return false;
+            }
+
+            // the two points are the same, so "IsBefore" is false, but we really do not expect to get asked this...
+            return false;
+        }
+
+        public Vector3 ToVector3()
+        {
+            return new Vector3(X, Y, Z);
+        }
+
+        public Vec3 Cross(Vec3 rhs)
+        {
+            return new Vec3(
+                Y * rhs.Z - Z * rhs.Y,
+                Z * rhs.X - X * rhs.Z,
+                X * rhs.Y - Y * rhs.X);
+        }
+
+        public float Dot(Vec3 rhs)
+        {
+            return X * rhs.X + Y * rhs.Y + Z * rhs.Z;
+        }
     }
 
+    [DebuggerDisplay("Centre: ({Centre.X}, {Centre.Y}, {Centre.Z}) Radius: {Radius}")]
     public class CircumSphere
     {
         public CircumSphere(IReadOnlyList<Vec3> Verts)
@@ -104,6 +391,7 @@ namespace Assets.Code.Voronoi
         }
     }
 
+    [DebuggerDisplay("({V1.X}, {V1.Y}, {V1.Z}) ({V2.X}, {V2.Y}, {V2.Z}) ({V3.X}, {V3.Y}, {V3.Z})")]
     public class Triangle
     {
         public Triangle(Vec3 p1, Vec3 p2, Vec3 p3)
@@ -125,6 +413,11 @@ namespace Assets.Code.Voronoi
                 yield return V2;
                 yield return V3;
             }
+        }
+
+        public Face ToFace()
+        {
+            return new Face(Verts.ToList());
         }
     }
 
@@ -184,7 +477,7 @@ namespace Assets.Code.Voronoi
             }
         }
 
-        public IEnumerable<Triangle> Faces
+        public IEnumerable<Triangle> Triangles
         {
             get
             {
@@ -197,13 +490,28 @@ namespace Assets.Code.Voronoi
             }
         }
 
-        internal bool UsesVert(Vec3 p)
+        public bool UsesVert(Vec3 p)
         {
             return Verts.Contains(p);
+        }
+
+        public VPolyhedron ToPolyhedron()
+        {
+            //            var ret = new VPolyhedron(Sphere.Centre);
+            // the centre here is the geometric center of the tetrahedron, not the circumcentre
+            var ret = new VPolyhedron(Verts.Aggregate((x, y) => x + y) * 0.25f);
+
+            foreach (var tri in Triangles)
+            {
+                ret.AddFace(tri.ToFace());
+            }
+
+            return ret;
         }
     }
 
     // a polyhedron made of triangles
+    [DebuggerDisplay("Trianges: {Triangles.Count}")]
     public class TriangularPolyhedron
     {
         [DebuggerDisplay("({I1},{I2},{I3})")]
@@ -238,14 +546,16 @@ namespace Assets.Code.Voronoi
             }
         }
 
-        public readonly List<TriIndex> Faces = new List<TriIndex>();
+        public readonly List<TriIndex> Triangles = new List<TriIndex>();
+        
         public IEnumerable<Triangle> TriFaces
         {
             get
             {
-                return Faces.Select(f => new Triangle(Verts[f.I1], Verts[f.I2], Verts[f.I3]));
+                return Triangles.Select(f => new Triangle(Verts[f.I1], Verts[f.I2], Verts[f.I3]));
             }
         }
+        
         public readonly List<Vec3> Verts = new List<Vec3>();
 
         public TriangularPolyhedron(List<DTetrahedron> tets)
@@ -258,7 +568,7 @@ namespace Assets.Code.Voronoi
 
         public void AddTetrahedron(DTetrahedron tet)
         {
-            foreach (var f in tet.Faces)
+            foreach (var f in tet.Triangles)
             {
                 var vert_idxs = f.Verts.Select(vert_idxs => AddFindVert(vert_idxs)).ToArray();
 
@@ -267,13 +577,13 @@ namespace Assets.Code.Voronoi
                 // we build ourselves from tets, when a tet we already saw contains the same face
                 // as one being added, it means that is becoming an internal face between two tets
                 // and we do not want it...
-                if (Faces.Contains(tri))
+                if (Triangles.Contains(tri))
                 {
-                    Faces.Remove(tri);
+                    Triangles.Remove(tri);
                 }
                 else
                 {
-                    Faces.Add(tri);
+                    Triangles.Add(tri);
                 }
             }
         }
@@ -293,21 +603,22 @@ namespace Assets.Code.Voronoi
         }
     }
 
-    public interface IDelaunay
+    public interface IDelaunay : IPolyhedronSet
     {
         public IDelaunay Clone();
         public IReadOnlyList<DTetrahedron> Tets { get; }
         public IEnumerable<Vec3> Verts { get; }
+        public List<String> GetVertTags(Vec3 v);
+        public float Tolerance { get; }
     }
 
-    public class Delaunay : IDelaunay
+    class Delaunay : IDelaunay
     {
-        readonly float Tolerance;
-
         public Delaunay(float tolerance)
         {
             TetsRW = new List<DTetrahedron>();
             Tolerance = tolerance;
+            Tags = new Dictionary<Vec3, List<String>>();
         }
 
         public Delaunay(Delaunay old)
@@ -316,12 +627,37 @@ namespace Assets.Code.Voronoi
             // of old we are good to be valid in that state forever...
             TetsRW = TetsRW;
             Tolerance = old.Tolerance;
+            Tags = old.Tags;
         }
 
         List<DTetrahedron> TetsRW { get; }
 
+        Dictionary<Vec3, List<String>> Tags;
+
+        #region IDelaunay
         public IReadOnlyList<DTetrahedron> Tets { get { return TetsRW; } }
         public IEnumerable<Vec3> Verts { get { return Tets.SelectMany(x => x.Verts).Distinct(); } }
+        public IDelaunay Clone()
+        {
+            return new Delaunay(this);
+        }
+        public List<String> GetVertTags(Vec3 v)
+        {
+            List<String> tags;
+
+            if (!Tags.TryGetValue(v, out tags))
+            {
+                return new List<String>();
+            }
+
+            return tags;
+        }
+        public float Tolerance { get; }
+        #endregion
+
+        #region IPolyhedronSet
+        public IReadOnlyList<IVPolyhedron> Polyhedrons => Tets.Select(tet => tet.ToPolyhedron()).ToList();
+        #endregion
 
         public void AddTet(DTetrahedron tet)
         {
@@ -368,9 +704,9 @@ namespace Assets.Code.Voronoi
             }
         }
 
-        internal void InitialiseWithVerts(Vector3[] verts)
+        public void InitialiseWithVerts(Vec3[] verts)
         {
-            Bounds b = new Bounds();
+            VBounds b = new VBounds();
 
             foreach (var p in verts)
             {
@@ -378,8 +714,8 @@ namespace Assets.Code.Voronoi
             }
 
             // build an encapsulating tetrahedron, using whichever axis is longest, and padding by 1 on each dimension
-            Vec3 c0 = new Vec3(b.min.x - 1, b.min.y - 1, b.min.z - 1);
-            float size = Mathf.Max(b.size.x, b.size.y, b.size.z) + 2;
+            Vec3 c0 = new Vec3(b.Min.X - 1, b.Min.Y - 1, b.Min.Y - 1);
+            float size = Mathf.Max(b.Size.X, b.Size.Y, b.Size.Z) + 2;
 
             // a right-angled prism which contains that box has its corners on the axes at 3x the
             // box dimensions
@@ -394,10 +730,8 @@ namespace Assets.Code.Voronoi
 
             System.Diagnostics.Debug.Assert(Validate());
 
-            foreach (var p in verts)
+            foreach (var v in verts)
             {
-                var v = new Vec3(p);
-
                 AddVert(v);
 
                 UnityEngine.Debug.Assert(Validate());
@@ -414,15 +748,47 @@ namespace Assets.Code.Voronoi
             UnityEngine.Debug.Assert(!Verts.Contains(c3));
         }
 
-        public IDelaunay Clone()
+        public void TagVert(Vec3 v, string tag)
         {
-            return new Delaunay(this);
+            List<String> tags;
+
+            if (!Tags.TryGetValue(v, out tags))
+            {
+                tags = new List<String>();
+                Tags[v] = tags;
+            }
+
+            tags.Add(tag);
+        }
+    }
+
+    public class VBounds
+    {
+        Bounds Bounds = new Bounds();
+
+        public void Encapsulate(Vec3 v)
+        {
+            Bounds.Encapsulate(v.ToVector3());
+        }
+
+        public Vec3 Min => new Vec3(Bounds.min);
+        public Vec3 Max => new Vec3(Bounds.max);
+        public Vec3 Size => new Vec3(Bounds.size);
+
+        public void Expand(float bound_extension)
+        {
+            Bounds.Expand(bound_extension);
         }
     }
 
     public class VoronoiUtil
     {
-        public Delaunay CreateDelaunay(Vector3[] verts)
+        public IDelaunay CreateDelaunay(Vec3[] verts)
+        {
+            return CreateDelaunayInternal(verts);
+        }
+
+        Delaunay CreateDelaunayInternal(Vec3[] verts)
         {
             var d = new Delaunay(1e-3f);
 
@@ -434,9 +800,9 @@ namespace Assets.Code.Voronoi
         // makes a voronoi for the given verts, clipping all the edge polyhedra
         // against an axis-aligned bounding box "bound_extension" larger than the minimum
         // box that would contain the verts
-        public IVoronoi CreateBoundedVoronoi(Vector3[] verts, float bound_extension)
+        public IVoronoi CreateBoundedVoronoi(Vec3[] verts, float bound_extension)
         {
-            Bounds b = new Bounds();
+            VBounds b = new VBounds();
 
             foreach (var p in verts)
             {
@@ -446,18 +812,23 @@ namespace Assets.Code.Voronoi
             // build an encapsulating cuboid bound_extension bigger than the minimum
             b.Expand(bound_extension);
 
-            var extended_verts = verts.Concat(new Vector3[] {
-                new Vector3(b.min.x, b.min.y, b.min.z),
-                new Vector3(b.min.x, b.min.y, b.max.z),
-                new Vector3(b.min.x, b.max.y, b.min.z),
-                new Vector3(b.min.x, b.max.y, b.max.z),
-                new Vector3(b.max.x, b.min.y, b.min.z),
-                new Vector3(b.max.x, b.min.y, b.max.z),
-                new Vector3(b.max.x, b.max.y, b.min.z),
-                new Vector3(b.max.x, b.max.y, b.max.z),
-            }).ToArray();
+            var bound_verts = new Vec3[] {
+                new Vec3(b.Min.X, b.Min.Y, b.Min.Z),
+                new Vec3(b.Min.X, b.Min.Y, b.Max.Z),
+                new Vec3(b.Min.X, b.Max.Y, b.Min.Z),
+                new Vec3(b.Min.X, b.Max.Y, b.Max.Z),
+                new Vec3(b.Max.X, b.Min.Y, b.Min.Z),
+                new Vec3(b.Max.X, b.Min.Y, b.Max.Z),
+                new Vec3(b.Max.X, b.Max.Y, b.Min.Z),
+                new Vec3(b.Max.X, b.Max.Y, b.Max.Z),
+            };
 
-            var d = CreateDelaunay(extended_verts);
+            var d = CreateDelaunayInternal(verts.Concat(bound_verts).ToArray());
+
+            foreach(var v in bound_verts)
+            {
+                d.TagVert(v, "bound");
+            }
 
             return CreateVoronoiInternal(d);
         }
