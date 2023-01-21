@@ -68,19 +68,7 @@ public class VoronoiTestBhv : MonoBehaviour
 
             IVoronoi v = vu.CreateBoundedVoronoi(points, 1);
 
-            var mid = Time.realtimeSinceStartup;
-
             GenerateMeshes(v);
-
-            var end = Time.realtimeSinceStartup;
-
-            var first = mid - start;
-            var second = end - mid;
-            var total = end - start;
-
-            var line = $"First half: {first}\nSecond half: {second}\nTotal: {total}";
-
-            System.Diagnostics.Debug.WriteLine(line);
 
             done = true;
         }
