@@ -1,0 +1,3 @@
+Asserts in VPolyhedron.AddFace
+-> faces with very small area
+--> merge near-identical points, losing neighbours/faces as a result?
