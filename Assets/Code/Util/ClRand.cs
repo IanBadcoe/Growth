@@ -2,7 +2,7 @@
 using UnityEngine;
 using System.Linq;
 
-namespace Util
+namespace Growth.Util
 {
     // taken from MS sample code and only changed in name and
     // making it clonable

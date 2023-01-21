@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace Assets.Code.Voronoi
+namespace Growth.Voronoi
 {
     public interface IVPolyhedron
     {
@@ -724,17 +724,17 @@ namespace Assets.Code.Voronoi
             var c3 = c0 + new Vec3(0, 0, size * 3);
 
             var bounding_tet = new DTetrahedron(c0, c1, c2, c3);
-            System.Diagnostics.Debug.Assert(bounding_tet.Valid);
+            //System.Diagnostics.Debug.Assert(bounding_tet.Valid);
 
             AddTet(bounding_tet);
 
-            System.Diagnostics.Debug.Assert(Validate());
+            //System.Diagnostics.Debug.Assert(Validate());
 
             foreach (var v in verts)
             {
                 AddVert(v);
 
-                UnityEngine.Debug.Assert(Validate());
+                //UnityEngine.Debug.Assert(Validate());
             }
 
             // remove the encapsulating verts we started with, and any associated tets
@@ -774,6 +774,7 @@ namespace Assets.Code.Voronoi
         public Vec3 Min => new Vec3(Bounds.min);
         public Vec3 Max => new Vec3(Bounds.max);
         public Vec3 Size => new Vec3(Bounds.size);
+        public Vec3 Centre => new Vec3(Bounds.center);
 
         public void Expand(float bound_extension)
         {
@@ -800,7 +801,11 @@ namespace Assets.Code.Voronoi
         // makes a voronoi for the given verts, clipping all the edge polyhedra
         // against an axis-aligned bounding box "bound_extension" larger than the minimum
         // box that would contain the verts
-        public IVoronoi CreateBoundedVoronoi(Vec3[] verts, float bound_extension)
+        //
+        // "probe_value" is the granularity for defining the bounds around the points:
+        // - we extend the bounding box by this in each direction
+        // - we generate additional points on that box in a square grid at this interval
+        public IVoronoi CreateBoundedVoronoi(IEnumerable<Vec3> verts, float probe_value)
         {
             VBounds b = new VBounds();
 
@@ -810,18 +815,61 @@ namespace Assets.Code.Voronoi
             }
 
             // build an encapsulating cuboid bound_extension bigger than the minimum
-            b.Expand(bound_extension);
+            b.Expand(probe_value * 2);
 
-            var bound_verts = new Vec3[] {
-                new Vec3(b.Min.X, b.Min.Y, b.Min.Z),
-                new Vec3(b.Min.X, b.Min.Y, b.Max.Z),
-                new Vec3(b.Min.X, b.Max.Y, b.Min.Z),
-                new Vec3(b.Min.X, b.Max.Y, b.Max.Z),
-                new Vec3(b.Max.X, b.Min.Y, b.Min.Z),
-                new Vec3(b.Max.X, b.Min.Y, b.Max.Z),
-                new Vec3(b.Max.X, b.Max.Y, b.Min.Z),
-                new Vec3(b.Max.X, b.Max.Y, b.Max.Z),
-            };
+            var bound_verts = new List<Vec3>();
+
+            // to get the grid size, we take each bound size (X, Y, Z), divide by the probe value to find how many we need to divide it
+            // into (e.g. we're going to do an integer number of steps of _approx_ probe_value size).  We always want 1 point at the top
+            // and 1 at the bottom but us having expanded the bounds by 2 * probe_value above should guarrantee that...
+            //
+            // BUT we still need to add 1 to the steps, to allow for one at the top and one at the bottom
+            // 
+            // Thus:
+            // - if the size is < probe_value, we will have two points
+            // - if it is between 1 and 2 probe sizes, we will have three points
+            // - etc
+            int x_steps = (int)(b.Size.X / probe_value);
+            int y_steps = (int)(b.Size.Y / probe_value);
+            int z_steps = (int)(b.Size.Z / probe_value);
+
+            float x_step = b.Size.X / x_steps;
+            float y_step = b.Size.Y / y_steps;
+            float z_step = b.Size.Z / z_steps;
+
+            for (int i = 0; i <= x_steps; i++)
+            {
+                for (int j = 0; j <= y_steps; j++)
+                {
+                    bound_verts.Add(new Vec3(b.Min.X + i * x_step, b.Min.X + j * y_step, b.Min.Z));
+                    bound_verts.Add(new Vec3(b.Min.X + i * x_step, b.Min.X + j * y_step, b.Max.Z));
+                }
+            }
+
+            // the edges of each plane's range (e.g. on the xy planes, the x = 0, y - 0, x = max, and y = max column/rows)
+            // over lap with other planes, so adopt a strategy of:
+            // xy -> supplies x and y
+            // xz -> supplies only x
+            // yz -> supplies neither
+
+            for (int i = 0; i <= x_steps; i++)
+            {
+                for (int j = 1; j < z_steps; j++)
+                {
+                    bound_verts.Add(new Vec3(b.Min.X + i * x_step, b.Min.Y, b.Min.Z + j * z_step));
+                    bound_verts.Add(new Vec3(b.Min.X + i * x_step, b.Max.Y, b.Min.Z + j * z_step));
+                }
+            }
+
+
+            for (int i = 1; i < y_steps; i++)
+            {
+                for (int j = 1; j < z_steps; j++)
+                {
+                    bound_verts.Add(new Vec3(b.Min.X, b.Min.Y + i * y_step, b.Min.Z + j * z_step));
+                    bound_verts.Add(new Vec3(b.Max.X, b.Min.Y + i * y_step, b.Min.Z + j * z_step));
+                }
+            }
 
             var d = CreateDelaunayInternal(verts.Concat(bound_verts).ToArray());
 

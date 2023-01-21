@@ -1,8 +1,8 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using Util;
+using Growth.Util;
+
+namespace Growth {
 
 public class RockGeneratorBhv : MonoBehaviour
 {
@@ -166,4 +166,6 @@ public class RockGeneratorBhv : MonoBehaviour
 
         FillBox(x - mt / 2, x + pt, y - mt, y + pt, 0, z_size);
     }
+}
+
 }

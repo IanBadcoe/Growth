@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace Assets.Code.Voronoi
+namespace Growth.Voronoi
 {
     /// <summary>
     /// Given four points in 3D space, solves for a sphere such that all four points

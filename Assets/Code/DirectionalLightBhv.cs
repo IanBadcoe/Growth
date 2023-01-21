@@ -1,8 +1,8 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Util;
+using Growth.Util;
+
+namespace Growth {
 
 public class DirectionalLightBhv : MonoBehaviour
 {
@@ -167,4 +167,6 @@ public class DirectionalLightBhv : MonoBehaviour
 
         return ret;
     }
+}
+
 }

@@ -1,9 +1,10 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
-using Util;
+using Growth.Util;
+
+namespace Growth {
 
 public class CellGridBhv : MonoBehaviour
 {
@@ -172,4 +173,6 @@ public class CellGridBhv : MonoBehaviour
     {
         return z >= 0 && z < ZSize;
     }
+}
+
 }

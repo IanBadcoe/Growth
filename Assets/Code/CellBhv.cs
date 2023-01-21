@@ -1,10 +1,12 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
-using Util;
+using Growth.Util;
+
+namespace Growth
+{
 
 public static class NeughbourDirExtensions
 {
@@ -15,12 +17,12 @@ public static class NeughbourDirExtensions
 
     static Vector3Int[] Offsets = new Vector3Int[]
     {
-        new Vector3Int(1, 0, 0),
-        new Vector3Int(-1, 0, 0),
-        new Vector3Int(0, 1, 0),
-        new Vector3Int(0, -1, 0),
-        new Vector3Int(0, 0, 1),
-        new Vector3Int(0, 0, -1),
+    new Vector3Int(1, 0, 0),
+    new Vector3Int(-1, 0, 0),
+    new Vector3Int(0, 1, 0),
+    new Vector3Int(0, -1, 0),
+    new Vector3Int(0, 0, 1),
+    new Vector3Int(0, 0, -1),
     };
 
     static public Vector3Int Offset(this Neighbours.NeighbourDir dir)
@@ -43,7 +45,8 @@ public class Neighbours
 
     CellBhv[] Data = new CellBhv[6];
 
-    public CellBhv this[NeighbourDir neighb] {
+    public CellBhv this[NeighbourDir neighb]
+    {
         get
         {
             return Data[(int)neighb];
@@ -83,7 +86,8 @@ public class CellBhv : MonoBehaviour
 
     private void Start()
     {
-        if (Materials == null) {
+        if (Materials == null)
+        {
             Materials = new Material[NumShades];
 
             for (int i = 0; i < NumShades; i++)
@@ -137,7 +141,7 @@ public class CellBhv : MonoBehaviour
             CurrentLightLevel = CurrentLightLevel * 0.9f + light * 0.1f;
         }
 
-        if (CurrentLightLevel < 0.5f/NumShades)
+        if (CurrentLightLevel < 0.5f / NumShades)
         {
             CurrentLightLevel = 0;
         }
@@ -150,17 +154,17 @@ public class CellBhv : MonoBehaviour
     }
 
     static readonly Vector2[] FacePoints = new Vector2[] {
-        new Vector2(0.079151f, 0.735459f),
-        new Vector2(0.703860f, 0.081259f),
-        new Vector2(0.152978f, 0.721733f),
-        new Vector2(0.122317f, 0.078323f),
-        new Vector2(0.135474f, 0.470970f),
-        new Vector2(0.512153f, 0.997676f),
-        new Vector2(0.064814f, 0.906687f),
-        new Vector2(0.985661f, 0.431769f),
-        new Vector2(0.030833f, 0.257656f),
-        new Vector2(0.956672f, 0.004360f),
-    };
+    new Vector2(0.079151f, 0.735459f),
+    new Vector2(0.703860f, 0.081259f),
+    new Vector2(0.152978f, 0.721733f),
+    new Vector2(0.122317f, 0.078323f),
+    new Vector2(0.135474f, 0.470970f),
+    new Vector2(0.512153f, 0.997676f),
+    new Vector2(0.064814f, 0.906687f),
+    new Vector2(0.985661f, 0.431769f),
+    new Vector2(0.030833f, 0.257656f),
+    new Vector2(0.956672f, 0.004360f),
+};
 
     public int FacesPointCount(Vector3 light_point)
     {
@@ -168,7 +172,7 @@ public class CellBhv : MonoBehaviour
 
         // do not consider faces which are burried against a neighbour
         // or those facing away from the light...
-        foreach(var dir in Neighbours.All())
+        foreach (var dir in Neighbours.All())
         {
             if (Neighbours[dir] == null && FaceFacesPoint(dir, light_point))
             {
@@ -183,7 +187,7 @@ public class CellBhv : MonoBehaviour
     {
         // the light has to be further out than the face to shine on it
         // and the face is +/- 0.5 from our centre...
-        switch(dir)
+        switch (dir)
         {
             case Neighbours.NeighbourDir.PlusX:
                 return point.x > transform.position.x + 0.5f;
@@ -208,7 +212,7 @@ public class CellBhv : MonoBehaviour
         {
             if (Neighbours[dir] == null && FaceFacesPoint(dir, light_point))
             {
-                foreach(Vector3 ret in FacePointSequence(dir))
+                foreach (Vector3 ret in FacePointSequence(dir))
                 {
                     yield return ret;
                 }
@@ -218,7 +222,7 @@ public class CellBhv : MonoBehaviour
 
     public IEnumerable<Vector3> FacePointSequence(Neighbours.NeighbourDir dir)
     {
-        foreach(var p in FacePoints)
+        foreach (var p in FacePoints)
         {
             yield return TransformIntoFace(p, dir);
         }
@@ -233,7 +237,7 @@ public class CellBhv : MonoBehaviour
 
     private Vector3 ToInFaceCoords(Vector2 p, Neighbours.NeighbourDir dir)
     {
-        switch(dir)
+        switch (dir)
         {
             case Neighbours.NeighbourDir.PlusX:
             case Neighbours.NeighbourDir.MinusX:
@@ -253,4 +257,6 @@ public class CellBhv : MonoBehaviour
     {
         return transform.position + (Vector3)dir.Offset() / 2;
     }
+}
+
 }
