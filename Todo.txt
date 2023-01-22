@@ -1,3 +1,22 @@
 Asserts in VPolyhedron.AddFace
 -> faces with very small area
 --> merge near-identical points, losing neighbours/faces as a result?
+
+Progressive build class:
+-> keep outer D tet -> tagged as "uninteresting"
+-> track D neighbours and whether "local" or not
+-> also track whether "interesting"
+--> only interesting ones form V cells
+-> when need new interesting cell
+--> if neighbour:
+---> should already have uninteresting neighbour at that point
+---> set interesting
+---> fill out any missing neighbours with uninteresting new points
+---> calculate VPoly
+--> if not neighbour:
+---> as above but will need to add central cell too
+-> spatial subdivision
+--> for sphere search?
+--> other uses later?
+--> R-tree?
+-> neighbours currently found via tets, given we are on a grid could simplify that?

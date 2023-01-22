@@ -45,8 +45,6 @@ public class VoronoiTestBhv : MonoBehaviour
 
             var start = Time.realtimeSinceStartup;
 
-            Voronoi.VoronoiUtil vu = new Voronoi.VoronoiUtil();
-
             ClRand rand = new ClRand(123);
 
             List<Vec3> points = new List<Vec3>();
@@ -66,14 +64,14 @@ public class VoronoiTestBhv : MonoBehaviour
                 }
             }
 
-            IVoronoi v = vu.CreateBoundedVoronoi(points, 1);
+            IVoronoi v = VoronoiUtil.CreateBoundedVoronoi(points, 1);
 
             GenerateMeshes(v);
 
             done = true;
         }
     }
-
+        
     private void GenerateMeshes(IPolyhedronSet ps)
     {
         int i = 0;

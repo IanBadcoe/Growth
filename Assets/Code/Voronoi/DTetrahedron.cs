@@ -1,0 +1,96 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+
+namespace Growth.Voronoi
+{
+    [DebuggerDisplay("(({Verts[0].X}, {Verts[0].Y}, {Verts[0].Z}) ({Verts[1].X}, {Verts[1].Y}, {Verts[1].Z}) ({Verts[2].X}, {Verts[2].Y}, {Verts[2].Z}) ({Verts[3].X}, {Verts[3].Y}, {Verts[3].Z}))")]
+    public class DTetrahedron
+    {
+        public DTetrahedron(Vec3 p0, Vec3 p1, Vec3 p2, Vec3 p3)
+        {
+            Verts = new List<Vec3> { p0, p1, p2, p3 };
+            Sphere = new CircumSphere(Verts);
+        }
+
+        public IReadOnlyList<Vec3> Verts { get; }
+        public CircumSphere Sphere { get; }
+
+        public enum AdjoinsResult
+        {
+            Separate,
+            Point,
+            Edge,
+            Face,
+            Identity
+        }
+
+        public AdjoinsResult Adjoins(DTetrahedron tet)
+        {
+            int count = 0;
+
+            foreach (var p in Verts)
+            {
+                if (tet.Verts.Contains(p))
+                {
+                    count++;
+                }
+            }
+
+            switch (count)
+            {
+                case 1:
+                    return AdjoinsResult.Point;
+                case 2:
+                    return AdjoinsResult.Edge;
+                case 3:
+                    return AdjoinsResult.Face;
+                case 4:
+                    return AdjoinsResult.Identity;
+            }
+
+            return AdjoinsResult.Separate;
+        }
+
+        public bool Valid
+        {
+            get
+            {
+                return Sphere.Valid;
+            }
+        }
+
+        public IEnumerable<Triangle> Triangles
+        {
+            get
+            {
+                // trying to get these rotating the same way
+                // but at the moment it doesn't matter
+                yield return new Triangle(Verts[0], Verts[1], Verts[2]);
+                yield return new Triangle(Verts[0], Verts[3], Verts[1]);
+                yield return new Triangle(Verts[0], Verts[2], Verts[3]);
+                yield return new Triangle(Verts[2], Verts[1], Verts[3]);
+            }
+        }
+
+        public bool UsesVert(Vec3 p)
+        {
+            return Verts.Contains(p);
+        }
+
+        public VPolyhedron ToPolyhedron()
+        {
+            //            var ret = new VPolyhedron(Sphere.Centre);
+            // the centre here is the geometric center of the tetrahedron, not the circumcentre
+            var ret = new VPolyhedron(Verts.Aggregate((x, y) => x + y) * 0.25f);
+
+            foreach (var tri in Triangles)
+            {
+                ret.AddFace(tri.ToFace());
+            }
+
+            return ret;
+        }
+    }
+}
