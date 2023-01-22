@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Growth.Voronoi
@@ -13,6 +14,12 @@ namespace Growth.Voronoi
 
             InitialiseDelaunay(size);
         }
+        
+        #region IPolyhedronSet
+        
+        public IReadOnlyList<IVPolyhedron> Polyhedrons => throw new NotImplementedException();
+        
+        #endregion
 
         #region IProgressiveVoronoi
         public void AddPoint(Vec3 position, IProgressiveVoronoi.Solidity solid)
@@ -38,13 +45,10 @@ namespace Growth.Voronoi
 
         private void InitialiseDelaunay(float size)
         {
-            // 0.25 because this is the size, not the radius/half-size
-            float sphere_radius = Mathf.Sqrt(size * size * 3 * 0.25f);
+            float half_size = size / 2;
 
-            Vec3 sphere_centre = new Vec3(0, 0, 0);
+            float sphere_radius = Mathf.Sqrt(half_size * half_size * 3);
 
-            // q is the distance of the tet centre to the closest point on each face as a fraction of the tet edge length
-            // derived from a slab of maths, which I will photograph and attach
             float Q = 2f / 9f * 3f / 4f / Mathf.Sqrt(2f / 3f);
 
             float tet_size = sphere_radius / Q;
@@ -54,12 +58,12 @@ namespace Growth.Voronoi
             // tet corners are:
             //
             // lower face in XZ plane:
-            // a = (-1/2,  -Q,     -1/3 sqrt(3/4))
-            // b = (+1/2,  -Q,     -1/3 sqrt(3/4))
-            // c = ( 0,    -Q,     +2/3 sqrt(3/4))
+            // a = (-1/2,  -Q,             -1/3 sqrt(3/4))
+            // b = (+1/2,  -Q,             -1/3 sqrt(3/4))
+            // c = ( 0,    -Q,             +2/3 sqrt(3/4))
             //
             // apex on y axis:
-            // d = ( 0,     1 - Q,  0            )
+            // d = ( 0,     sqrt(2/3) - Q,  0            )
             //
             // e.g. XZ plane
             //                         ______________________
@@ -79,7 +83,20 @@ namespace Growth.Voronoi
             //                        |
             //                         (z = 0)
             //
-            // and then just scale all that up by tet_size
+            // and then we'll scale all that up by tet_size
+
+
+            Vec3 a = new Vec3(-1f / 2, -Q, -1f / 3 * Mathf.Sqrt(3f / 4));
+            Vec3 b = new Vec3(+1f / 2, -Q, -1f / 3 * Mathf.Sqrt(3f / 4));
+            Vec3 c = new Vec3(0, -Q, 2f / 3 * Mathf.Sqrt(3f / 4));
+            Vec3 d = new Vec3(0, Mathf.Sqrt(2f / 3) - Q, 0);
+
+            a *= tet_size;
+            b *= tet_size;
+            c *= tet_size;
+            d *= tet_size;
+
+            Delaunay.InitialiseWithVerts(new Vec3[] { a, b, c, d });
         }
     }
 }

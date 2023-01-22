@@ -19,7 +19,7 @@ namespace Growth.Voronoi
     // -- e.g. surrounding the added point/shape any grid cells which do not already contain a point need a vacuum point added
     // -- the cell size of this grid defines the average size for added volumes
     // - will probably internally use a spatial subdivision to find circumspheres fast
-    public interface IProgressiveVoronoi
+    public interface IProgressiveVoronoi : IPolyhedronSet
     {
         enum Solidity
         {

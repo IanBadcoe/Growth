@@ -5,12 +5,11 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class TetTest : MonoBehaviour
+public class TetTestBhv : MonoBehaviour
 {
     public GameObject MeshContainer;
     public GameObject MeshTemplate;
     public Mesh SphereMesh;
-    public Mesh CubeMesh;
     public List<Material> Materials;
     public float Size;
 
