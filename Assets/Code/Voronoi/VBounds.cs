@@ -1,12 +1,9 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Growth.Voronoi
 {
-    // the only purpose here is to make an immutable version of the wrapped UnityEngine.Bounds
-    //
-    // only exposing the exact set of members from that which currently need, will add more as required
-    //
-    // may add the odd custom capability in time, if that makes sense
+    // the only purpose here is to make a Vec3 version of the wrapped UnityEngine.Bounds
     public class VBounds
     {
         Bounds Bounds;
@@ -29,10 +26,28 @@ namespace Growth.Voronoi
         public Vec3 Max => new Vec3(Bounds.max);
         public Vec3 Size => new Vec3(Bounds.size);
         public Vec3 Centre => new Vec3(Bounds.center);
+        public bool Contains(Vec3 pnt)
+        {
+            return Bounds.Contains(pnt.ToVector3());
+        }
 
         public void Expand(float bound_extension)
         {
             Bounds.Expand(bound_extension);
+        }
+
+        public IEnumerable<Vec3> Corners {
+            get
+            {
+                yield return new Vec3(Bounds.min.x, Bounds.min.y, Bounds.min.z);
+                yield return new Vec3(Bounds.min.x, Bounds.min.y, Bounds.max.z);
+                yield return new Vec3(Bounds.min.x, Bounds.max.y, Bounds.min.z);
+                yield return new Vec3(Bounds.min.x, Bounds.max.y, Bounds.max.z);
+                yield return new Vec3(Bounds.max.x, Bounds.min.y, Bounds.min.z);
+                yield return new Vec3(Bounds.max.x, Bounds.min.y, Bounds.max.z);
+                yield return new Vec3(Bounds.max.x, Bounds.max.y, Bounds.max.z);
+                yield return new Vec3(Bounds.max.x, Bounds.max.y, Bounds.min.z);
+            }
         }
     }
 }

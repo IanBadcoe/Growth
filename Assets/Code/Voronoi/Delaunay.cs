@@ -107,8 +107,13 @@ namespace Growth.Voronoi
                 b.Encapsulate(p);
             }
 
+            foreach (var c in verts)
+            {
+                Debug.Assert(b.Contains(c));
+            }
+
             // build an encapsulating tetrahedron, using whichever axis is longest, and padding by 1 on each dimension
-            Vec3 c0 = new Vec3(b.Min.X - 1, b.Min.Y - 1, b.Min.Y - 1);
+            Vec3 c0 = new Vec3(b.Min.X - 1, b.Min.Y - 1, b.Min.Z - 1);
             float size = Mathf.Max(b.Size.X, b.Size.Y, b.Size.Z) + 2;
 
             // a right-angled prism which contains that box has its corners on the axes at 3x the
@@ -120,7 +125,27 @@ namespace Growth.Voronoi
             var bounding_tet = new DTetrahedron(c0, c1, c2, c3);
             //System.Diagnostics.Debug.Assert(bounding_tet.Valid);
 
+            // all the corners of the bounding volume we just invented should be within the sphere of this tet...
+            // as should c0 -> c3
+            // and the original input points
+
+            foreach (var c in b.Corners)
+            {
+                Debug.Assert(bounding_tet.Sphere.Contains(c, 0));
+            }
+            foreach (var c in new Vec3[] {c0, c1, c2, c3})
+            {
+                Debug.Assert(bounding_tet.Sphere.Contains(c, 0));
+            }
+            foreach (var c in verts)
+            {
+                Debug.Assert(bounding_tet.Sphere.Contains(c, 0));
+            }
+
+
             AddTet(bounding_tet);
+
+            // all the corners of the bounding volume we just invented should be within the sphere of this tet...
 
             //System.Diagnostics.Debug.Assert(Validate());
 

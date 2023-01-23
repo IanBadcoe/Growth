@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using UnityEngine;
 
 namespace Growth.Voronoi
@@ -81,6 +82,11 @@ namespace Growth.Voronoi
 
             // the two points are the same, so "IsBefore" is false, but we really do not expect to get asked this...
             return false;
+        }
+
+        public Vec3Int ToVec3Int()
+        {
+            return new Vec3Int(Mathf.FloorToInt(X), Mathf.FloorToInt(Y), Mathf.FloorToInt(Z));
         }
 
         public Vector3 ToVector3()

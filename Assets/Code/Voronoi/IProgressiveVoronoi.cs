@@ -23,19 +23,26 @@ namespace Growth.Voronoi
     {
         enum Solidity
         {
+            Unknown,
             Solid,
             Vacuum
         }
 
-        void AddPoint(Vec3 position, Solidity solid);
-        void RemovePoint(Vec3 position);        // currently a euphemism for setting it vacuum
+        void AddPoint(Vec3Int position);            // currently this is implicitly "solid" as we do not need any manual way of adding
+                                                    // vacuum points...
+        void RemovePoint(Vec3Int position);         // currently a euphemism for setting it vacuum, but want a true delete later
+                                                    // will need to make that "smart" in that if we are a bound of a point which is still
+                                                    // solid, then we need not to delete, and similarly, if we have vacuum neighbours
+                                                    // which are only there for us, they need to delete too...
         IProgressivePoint Point(Vec3Int pos);
         void SetSolidity(Vec3Int pos, Solidity solid);
     }
 
     public interface IProgressivePoint
     {
+        bool Exists { get; }            // we need something to return, even if we have no point at this point
         Vec3 Position { get; }
+        Vec3Int Cell { get; }           // even if we have no point, this is filled in with the centre of the cell asked about
         IProgressiveVoronoi.Solidity Solidity { get; }
         IVPolyhedron Polyhedron { get; }
         Mesh Mesh { get; }
