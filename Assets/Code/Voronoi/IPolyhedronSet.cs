@@ -4,6 +4,6 @@ namespace Growth.Voronoi
 {
     public interface IPolyhedronSet
     {
-        IReadOnlyList<IVPolyhedron> Polyhedrons { get; }
+        IEnumerable<IVPolyhedron> Polyhedrons { get; }
     }
 }

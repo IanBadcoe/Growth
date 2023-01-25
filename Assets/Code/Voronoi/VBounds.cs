@@ -33,7 +33,8 @@ namespace Growth.Voronoi
 
         public void Expand(float bound_extension)
         {
-            Bounds.Expand(bound_extension);
+            // Unity put half on either end
+            Bounds.Expand(bound_extension * 2);
         }
 
         public IEnumerable<Vec3> Corners {

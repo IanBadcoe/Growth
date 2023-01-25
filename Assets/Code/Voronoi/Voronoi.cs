@@ -16,8 +16,7 @@ namespace Growth.Voronoi
         #region IVoronoi
         public IEnumerable<Face> Faces => Polyhedrons.SelectMany(reg => reg.Faces).Distinct();
         public IEnumerable<Vec3> Verts => Polyhedrons.SelectMany(reg => reg.Verts).Distinct();
-        public IReadOnlyList<IVPolyhedron> Polyhedrons => RegionsRW.Values.ToList();
-        public IReadOnlyList<IVPolyhedron> VPolyhedrons => RegionsRW.Values.ToList();
+        public IEnumerable<IVPolyhedron> Polyhedrons => RegionsRW.Values;
         public IDelaunay Delaunay { get; set; }
         public float Tolerance => Delaunay.Tolerance;
         #endregion

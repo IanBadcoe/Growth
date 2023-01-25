@@ -49,7 +49,7 @@ namespace Growth.Voronoi
         #endregion
 
         #region IPolyhedronSet
-        public IReadOnlyList<IVPolyhedron> Polyhedrons => Tets.Select(tet => tet.ToPolyhedron()).ToList();
+        public IEnumerable<IVPolyhedron> Polyhedrons => Tets.Select(tet => tet.ToPolyhedron());
         #endregion
 
         public void AddTet(DTetrahedron tet)
@@ -106,6 +106,9 @@ namespace Growth.Voronoi
             {
                 b.Encapsulate(p);
             }
+
+            // looks like in Unit terms, points on the edge occasionally are considered outside the bound?
+            b.Expand(0.001f);
 
             foreach (var c in verts)
             {
