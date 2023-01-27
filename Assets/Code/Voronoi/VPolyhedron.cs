@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Growth.Util;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
@@ -32,7 +33,7 @@ namespace Growth.Voronoi
                     break;
 
                 case Face.RotationDirection.Indeterminate:
-                    UnityEngine.Debug.Assert(false);
+                    MyAssert.IsTrue(false, "Usually means we got a degenerate or near degenerate face");
                     break;
             }
         }

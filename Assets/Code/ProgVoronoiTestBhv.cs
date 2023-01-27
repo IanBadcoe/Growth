@@ -49,19 +49,30 @@ namespace Growth
                 }
                 else
                 {
-                    var pnt = InstantiatedMeshes.Keys.ToList()[Random.IntRange(0, InstantiatedMeshes.Keys.Count)];
+                    var done = false;
 
-                    var expansion_points = pnt.Cell.OrthoNeighbours
-                        .Select(c => Voronoi.Point(c))
-                        .Where(pnt => Voronoi.InRange(pnt.Cell, IProgressiveVoronoi.Solidity.Solid))
-                        .Where(pnt => pnt.Solidity == IProgressiveVoronoi.Solidity.Vacuum)
-                        .ToList();
+                    do
+                    {
+                        var pnt = InstantiatedMeshes.Keys.ToList()[Random.IntRange(0, InstantiatedMeshes.Keys.Count)];
 
-                    int idx = Random.IntRange(0, expansion_points.Count);
-                    var exp_pnt = expansion_points[idx];
-                    expansion_points.RemoveAt(idx);
+                        var expansion_points = pnt.Cell.OrthoNeighbours.ToList()
+                            .Where(c => Voronoi.InRange(c, IProgressiveVoronoi.Solidity.Solid))
+                            .Select(c => Voronoi.Point(c))
+                            .Where(pnt => pnt.Solidity == IProgressiveVoronoi.Solidity.Vacuum)
+                            .ToList();
 
-                    Voronoi.AddPoint(exp_pnt.Cell);
+                        if (expansion_points.Count > 0)
+                        {
+                            int idx = Random.IntRange(0, expansion_points.Count);
+                            var exp_pnt = expansion_points[idx];
+                            expansion_points.RemoveAt(idx);
+
+                            Voronoi.AddPoint(exp_pnt.Cell);
+
+                            done = true;
+                        }
+                    }
+                    while (!done);
                 }
 
                 ProgressiveInstantiateMeshes(Voronoi);
