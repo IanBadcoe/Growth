@@ -23,7 +23,7 @@ namespace Growth.Voronoi
         // set t -ve if you want to make the test looser
         public bool Contains(Vec3 p, float t)
         {
-            return (Centre - p).Size2() < (Radius - t) * (Radius - t);
+            return (Centre - p).Length2() < (Radius - t) * (Radius - t);
         }
     }
 }

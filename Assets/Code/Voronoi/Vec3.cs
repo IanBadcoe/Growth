@@ -41,14 +41,19 @@ namespace Growth.Voronoi
             return new Vec3(lhs.X - rhs.X, lhs.Y - rhs.Y, lhs.Z - rhs.Z);
         }
 
+        public static Vec3 operator -(Vec3 lhs)
+        {
+            return new Vec3(-lhs.X, -lhs.Y, -lhs.Z);
+        }
+
         public static Vec3 operator *(Vec3 lhs, float rhs)
         {
             return new Vec3(lhs.X * rhs, lhs.Y * rhs, lhs.Z * rhs);
         }
 
-        public float Size2()
+        public static Vec3 operator /(Vec3 lhs, float rhs)
         {
-            return X * X + Y * Y + Z * Z;
+            return new Vec3(lhs.X / rhs, lhs.Y / rhs, lhs.Z / rhs);
         }
 
         public bool IsBefore(Vec3 other)
@@ -105,6 +110,21 @@ namespace Growth.Voronoi
         public float Dot(Vec3 rhs)
         {
             return X * rhs.X + Y * rhs.Y + Z * rhs.Z;
+        }
+
+        public Vec3 Normalised()
+        {
+            return this / Length();
+        }
+
+        private float Length()
+        {
+            return Mathf.Sqrt(Length2());
+        }
+
+        public float Length2()
+        {
+            return Dot(this);
         }
     }
 }

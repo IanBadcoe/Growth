@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Growth.Util
 {
-    class MeshUtil
+    public class MeshUtil
     {
         // points are translated to be relative to origin,
         // so that when we instantiate this we set its position equal to that
@@ -39,5 +39,40 @@ namespace Growth.Util
 
             return mesh;
         }
+
+        //static Mesh FaceMesh(IVPolyhedron poly, Vec3 origin)
+        //{
+        //    var mesh = new Mesh();
+
+        //    Vector3[] verts = poly.Verts.Select(v => (v - origin).ToVector3()).ToArray();
+        //    mesh.vertices = verts;
+
+        //    List<int> tris = new List<int>();
+
+        //    var v3_verts = poly.Verts.ToArray();
+
+        //    List<Vector3> duplicated_verts = new List<Vector3>();
+        //    List<Vector3> normals = new List<Vector3>();
+
+        //    foreach (var face in poly.Faces)
+        //    {
+        //        int vert_base = duplicated_verts.Count;
+
+        //        int num_verts = face.Verts.Count;
+        //        normals.AddRange(Enumerable.Repeat(face.Normal.ToVector3(), num_verts));
+        //        duplicated_verts.AddRange(face.Verts.Select(v => (v - origin).ToVector3()));
+
+        //        for (int i = 1; i < num_verts - 1; i++)
+        //        {
+        //            tris.AddRange(new int[] { vert_base, vert_base + i, vert_base + i + 1 });
+        //        }
+        //    }
+
+        //    mesh.vertices = duplicated_verts.ToArray();
+        //    mesh.normals = normals.ToArray();
+        //    mesh.triangles = tris.ToArray();
+
+        //    return mesh;
+        //}
     }
 }
