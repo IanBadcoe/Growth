@@ -53,6 +53,7 @@ namespace Growth.Voronoi
             }
         }
 
+
         public Face FaceWithNeighbour(IProgressivePoint neighbour)
         {
             Face ret = null;
@@ -281,6 +282,11 @@ namespace Growth.Voronoi
                     // in here, we are a new face to the neighbour as well...
                     neighbour.FacesMap[point] = face;
                 }
+                else
+                {
+                    // the face our neighbour has is backwards compared to what we want...
+                    face = face.Reversed();
+                }
 
                 point.FacesMap[neighbour] = face;
 
@@ -292,10 +298,10 @@ namespace Growth.Voronoi
             }
         }
 
-        private Face CreateFace(Vec3 v1, Vec3 v2)
+        private Face CreateFace(Vec3 our_point, Vec3 other_point)
         {
             // find all the tets that use this edge
-            var edge_tets = Delaunay.Tets.Where(tet => tet.UsesVert(v1) && tet.UsesVert(v2)).ToList();
+            var edge_tets = Delaunay.Tets.Where(tet => tet.UsesVert(our_point) && tet.UsesVert(other_point)).ToList();
 
             var face_verts = new List<Vec3>();
 
@@ -303,7 +309,7 @@ namespace Growth.Voronoi
 
             // get any one other vert of this tet, this indicates the direction we are
             // "coming from"
-            var v_from = current_tet.Verts.Where(v => v != v1 && v != v2).First();
+            var v_from = current_tet.Verts.Where(v => v != our_point && v != other_point).First();
 
             do
             {
@@ -312,10 +318,10 @@ namespace Growth.Voronoi
                 face_verts.Add(current_tet.Sphere.Centre);
 
                 // the remaining local vert when we strike off the two common to the edge and the one we came from
-                var v_towards = current_tet.Verts.Where(v => v != v1 && v != v2 && v != v_from).First();
+                var v_towards = current_tet.Verts.Where(v => v != our_point && v != other_point && v != v_from).First();
 
                 // we move to the tet which shares this face with us...
-                var tet_next = edge_tets.Where(tet => tet.UsesVert(v1) && tet.UsesVert(v2) && tet.UsesVert(v_towards)).FirstOrDefault();
+                var tet_next = edge_tets.Where(tet => tet.UsesVert(our_point) && tet.UsesVert(other_point) && tet.UsesVert(v_towards)).FirstOrDefault();
 
                 current_tet = tet_next;
 
@@ -337,7 +343,7 @@ namespace Growth.Voronoi
             // but the contact polygon is of negligeable area so the neighbour-ness can be ignored, it is only as if the
             // two points were minutely further apart in the first place...)
 
-            return new Face(face_verts);
+            return new Face(face_verts, (other_point - our_point).Normalised());
         }
 
         private IEnumerable<ProgressivePoint> PointNeighbours(IProgressivePoint point)
@@ -376,9 +382,9 @@ namespace Growth.Voronoi
         {
             // our point is in the centre of the cell +/- a randomisation
             return new Vec3(
-                cell.X + Random.FloatRange(-1f / 7, 1f / 7) + 0.5f,
-                cell.Y + Random.FloatRange(-1f / 7, 1f / 7) + 0.5f,
-                cell.Z + Random.FloatRange(-1f / 7, 1f / 7) + 0.5f);
+                cell.X + /*Random.FloatRange(-1f / 7, 1f / 7) +*/ 0.5f,
+                cell.Y + /*Random.FloatRange(-1f / 7, 1f / 7) +*/ 0.5f,
+                cell.Z + /*Random.FloatRange(-1f / 7, 1f / 7) +*/ 0.5f);
         }
     }
 }

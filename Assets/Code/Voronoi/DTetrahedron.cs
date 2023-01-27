@@ -17,6 +17,8 @@ namespace Growth.Voronoi
         public IReadOnlyList<Vec3> Verts { get; }
         public CircumSphere Sphere { get; }
 
+        public Vec3 Centre => Verts.Aggregate((v1, v2) => v1 + v2) / 4;
+
         public enum AdjoinsResult
         {
             Separate,
@@ -87,7 +89,7 @@ namespace Growth.Voronoi
 
             foreach (var tri in Triangles)
             {
-                ret.AddFace(tri.ToFace());
+                ret.AddFace(tri.ToFace((tri.Centre - Centre).Normalised()));
             }
 
             return ret;

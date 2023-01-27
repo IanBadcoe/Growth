@@ -28,9 +28,11 @@ namespace Growth.Voronoi
             }
         }
 
-        public Face ToFace()
+        public Vec3 Centre => Verts.Aggregate((v1, v2) => v1 + v2) / 3;
+
+        public Face ToFace(Vec3 normal)
         {
-            return new Face(Verts.ToList());
+            return new Face(Verts.ToList(), normal);
         }
     }
 }

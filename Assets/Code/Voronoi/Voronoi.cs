@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Growth.Util;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -128,7 +129,7 @@ namespace Growth.Voronoi
                     // but the contact polygon is of negligeable area so the neighbour-ness can be ignored, it is only as if the
                     // two points were minutely further apart in the first place...)
 
-                    Face face = new Face(face_verts);
+                    Face face = new Face(face_verts, (v2 - v1).Normalised());
 
                     VPolyhedron v1_poly;
                     VPolyhedron v2_poly;
@@ -150,7 +151,7 @@ namespace Growth.Voronoi
                             RegionsRW[v2] = v2_poly;
                         }
 
-                        v2_poly.AddFace(face);
+                        v2_poly.AddFace(face.Reversed());
                     } 
                 }
             }

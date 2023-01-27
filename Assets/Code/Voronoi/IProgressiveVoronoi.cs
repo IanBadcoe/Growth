@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Growth.Util;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Growth.Voronoi
@@ -36,7 +37,7 @@ namespace Growth.Voronoi
         }
 
         void AddPoint(Vec3Int position);            // currently this is implicitly "solid" as we do not need any manual way of adding
-                                                    // vacuum points...
+                                                                                    // vacuum points...
         void RemovePoint(Vec3Int position);         // currently a euphemism for setting it vacuum, but want a true delete later
                                                     // will need to make that "smart" in that if we are a bound of a point which is still
                                                     // solid, then we need not to delete, and similarly, if we have vacuum neighbours

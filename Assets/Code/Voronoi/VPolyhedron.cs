@@ -16,26 +16,18 @@ namespace Growth.Voronoi
 
         List<Face> FacesRW;
 
+        #region IVPolyhedron
         public IReadOnlyList<Face> Faces => FacesRW;
         public IReadOnlyList<Vec3> Verts => Faces.SelectMany(f => f.Verts).Distinct().ToList();
         public Vec3 Centre { get; }
+        #endregion
 
         public void AddFace(Face face)
         {
-            switch (face.CalcRotationDirection(Centre))
-            {
-                case Face.RotationDirection.Clockwise:
-                    FacesRW.Add(face);
-                    break;
+            MyAssert.IsTrue(face.Normal.Dot((face.Centre - Centre).Normalised()) > 0,
+                "Face's idea of its normal not pointing away from polygon centre");
 
-                case Face.RotationDirection.Anticlockwise:
-                    FacesRW.Add(face.Reversed());
-                    break;
-
-                case Face.RotationDirection.Indeterminate:
-                    MyAssert.IsTrue(false, "Usually means we got a degenerate or near degenerate face");
-                    break;
-            }
+            FacesRW.Add(face);
         }
 
         public static VPolyhedron Cube(float size)
@@ -50,7 +42,7 @@ namespace Growth.Voronoi
                 new Vec3( hs, -hs, -hs),
                 new Vec3( hs,  hs, -hs),
                 new Vec3(-hs,  hs, -hs),
-            }));
+            }, new Vec3(0, 0, -1)));
 
             ret.AddFace(new Face(new List<Vec3>
             {
@@ -58,7 +50,7 @@ namespace Growth.Voronoi
                 new Vec3( hs, -hs,  hs),
                 new Vec3( hs,  hs,  hs),
                 new Vec3(-hs,  hs,  hs),
-            }));
+            }, new Vec3(0, 0, 1)));
 
             ret.AddFace(new Face(new List<Vec3>
             {
@@ -66,7 +58,7 @@ namespace Growth.Voronoi
                 new Vec3( hs, -hs, -hs),
                 new Vec3( hs, -hs,  hs),
                 new Vec3(-hs, -hs,  hs),
-            }));
+            }, new Vec3(0, -1, 0)));
 
             ret.AddFace(new Face(new List<Vec3>
             {
@@ -74,7 +66,7 @@ namespace Growth.Voronoi
                 new Vec3( hs,  hs, -hs),
                 new Vec3( hs,  hs,  hs),
                 new Vec3(-hs,  hs,  hs),
-            }));
+            }, new Vec3(0, 1, 0)));
 
             ret.AddFace(new Face(new List<Vec3>
             {
@@ -82,7 +74,7 @@ namespace Growth.Voronoi
                 new Vec3(-hs,  hs, -hs),
                 new Vec3(-hs,  hs,  hs),
                 new Vec3(-hs, -hs,  hs),
-            }));
+            }, new Vec3(-1, 0, 0)));
 
             ret.AddFace(new Face(new List<Vec3>
             {
@@ -90,7 +82,7 @@ namespace Growth.Voronoi
                 new Vec3( hs,  hs, -hs),
                 new Vec3( hs,  hs,  hs),
                 new Vec3( hs, -hs,  hs),
-            }));
+            }, new Vec3(-1, 0, 0)));
 
             return ret;
         }

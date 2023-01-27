@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Growth.Util;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -8,12 +9,31 @@ namespace Growth.Voronoi
     [DebuggerDisplay("Verts: {Verts.Count}")]
     public class Face
     {
-        public Face(List<Vec3> verts)
+        public Face(List<Vec3> verts, Vec3 normal)
         {
             Verts = verts;
+
+            // fix the rotation direction to match the normal
+            switch (CalcRotationDirection(normal))
+            {
+                case Face.RotationDirection.Clockwise:
+                    break;
+
+                case Face.RotationDirection.Anticlockwise:
+                    Verts = Verts.Reverse().ToList();
+                    break;
+
+                case Face.RotationDirection.Indeterminate:
+                    MyAssert.IsTrue(false, "Usually means we got a degenerate or near degenerate face");
+                    break;
+            }
+
+            Normal = normal;
         }
 
         public IReadOnlyList<Vec3> Verts;
+        public Vec3 Normal { get; }
+        public Vec3 Centre => Verts.Aggregate((v1, v2) => v1 + v2) / Verts.Count;
 
         public enum RotationDirection
         {
@@ -22,7 +42,7 @@ namespace Growth.Voronoi
             Indeterminate
         }
 
-        public RotationDirection CalcRotationDirection(Vec3 from_centre)
+        public RotationDirection CalcRotationDirection(Vec3 normal)
         {
             // this works by calculating 2* the signed area of the polygon...
             //
@@ -69,12 +89,14 @@ namespace Growth.Voronoi
                 prev = here;
             }
 
+            // however, it is not the magnitude (area) of accum we want, but its direction
+            //
             // accum is normal to the face such that viewing _down_ it the face looks anticlockwise
 
             // so if we get the projection on to that of a vector from our centre to any point in the face
             // that will be -ve for anticlockwise, positive for clockwise and close to zero if something is wrong
             // like a degenerate face or the centre being in the plane of the face
-            var prod = (Verts.First() - from_centre).Dot(accum);
+            var prod = normal.Dot(accum.Normalised());
 
             if (prod > 1e-6f)
             {
@@ -91,7 +113,7 @@ namespace Growth.Voronoi
 
         internal Face Reversed()
         {
-            return new Face(Verts.Reverse().ToList());
+            return new Face(Verts.Reverse().ToList(), -Normal);
         }
     }
 }
