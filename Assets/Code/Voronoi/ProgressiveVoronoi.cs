@@ -143,7 +143,9 @@ namespace Growth.Voronoi
 
             float sphere_radius = Mathf.Sqrt(half_size * half_size * 3);
 
-            float Q = 2f / 9f * 3f / 4f / Mathf.Sqrt(2f / 3f);
+            // did a whole slew of maths to show Q = 1/6 * sqrt(2/3) is the closest approach (centre) of
+            // a tet face to the tet centroid (when the tet edge length is 1)
+            float Q = 1f / 6f / Mathf.Sqrt(2f / 3f);
 
             float tet_size = sphere_radius / Q;
 
@@ -158,6 +160,9 @@ namespace Growth.Voronoi
             //
             // apex on y axis:
             // d = ( 0,     sqrt(2/3) - Q,  0            )
+            //
+            // (I did a whole slew of trig to show Q = 1/6 * sqrt(2/3) is the closest approach (centre) of
+            //  a tet face to the tet centroid (when the tet edge length is 1) see Docs/TetCentreDistanceMaths.jpg)
             //
             // e.g. XZ plane
             //                         ______________________

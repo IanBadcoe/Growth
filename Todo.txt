@@ -3,15 +3,18 @@ Asserts in VPolyhedron.AddFace
 --> merge near-identical points, losing neighbours/faces as a result?
 
 Progressive build class:
--> keep outer D tet -> tagged as "uninteresting"
+-> keep outer D tet -> tagged as "vacuum"
+--> make regular tet, knowing this has 0.18144 sphere inside, which constitutes play area
+--> work out how to use 7sf of fp precision to make this as big as possible
+--> stop using abs coords in face facing
 -> track D neighbours and whether "local" or not
--> also track whether "interesting"
---> only interesting ones form V cells
--> when need new interesting cell
+-> also track whether "solid"
+--> only solid ones form V cells
+-> when need new solid cell
 --> if neighbour:
----> should already have uninteresting neighbour at that point
----> set interesting
----> fill out any missing neighbours with uninteresting new points
+---> should already have vacuum neighbour at that point
+---> set solid
+---> fill out any missing neighbours with vacuum new points
 ---> calculate VPoly
 --> if not neighbour:
 ---> as above but will need to add central cell too
@@ -19,4 +22,14 @@ Progressive build class:
 --> for sphere search?
 --> other uses later?
 --> R-tree?
--> neighbours currently found via tets, given we are on a grid could simplify that?
+-> there is an underlying regular grid
+--> we are limited to one point in each cell
+--> but the point can be anywhere in the cell
+
+Advanced progressive build:
+-> allow >1 point per cell, e.g. the grid only matters for filling in missing vacuum points
+-> allow addition of "shapes" which are basically one solid point surrounded by vacuum ones, as usual, but the vacuum points are futher away than a single grid step
+-> allow real point deletion (required for "shapes" if they need to "blow a hole" in existing points
+--> adding a shape will take out any existing solid points it hits, or cave in the side of another shape...
+
+ShaderToy - for shader examples
