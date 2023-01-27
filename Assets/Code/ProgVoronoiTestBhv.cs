@@ -18,46 +18,68 @@ namespace Growth
 
         public int RSeed;
 
-        int done = 0;
+        bool running = false;
 
-        IProgressiveVoronoi v = null;
+        ClRand Random;
+        IProgressiveVoronoi Voronoi;
 
-        Dictionary<Mesh, GameObject> InstantiatedMeshes = new Dictionary<Mesh, GameObject>();
+        Dictionary<IProgressivePoint, GameObject> InstantiatedMeshes = new Dictionary<IProgressivePoint, GameObject>();
+
+        float NextUpdate = 0;
+
+        void Start()
+        {
+            Random = new ClRand(RSeed);
+            Voronoi = VoronoiUtil.CreateProgressiveVoronoi(10, 1e-3f, Random.NewClRand());
+        }
 
         // Use this for initialization
         void Update()
         {
-            if (done == 0 && Input.GetKey(KeyCode.Space))
+            if (Input.GetKeyDown(KeyCode.Space))
             {
-                v = VoronoiUtil.CreateProgressiveVoronoi(10, 1e-3f, new ClRand(RSeed));
-
-                v.AddPoint(new Vec3Int(5, 5, 6));
-
-                ProgressiveInstantiateMeshes(v);
-
-                done = 1;
+                running = !running;
             }
-            else if (done == 1 && Input.GetKey(KeyCode.Space))
+
+            if (running && Time.realtimeSinceStartup > NextUpdate)
             {
-                v.AddPoint(new Vec3Int(5, 5, 7));
+                if (!Voronoi.AllPoints.Any())
+                {
+                    Voronoi.AddPoint(new Vec3Int(5, 5, 6));
+                }
+                else
+                {
+                    var pnt = InstantiatedMeshes.Keys.ToList()[Random.IntRange(0, InstantiatedMeshes.Keys.Count)];
 
-                ProgressiveInstantiateMeshes(v);
+                    var expansion_points = pnt.Cell.OrthoNeighbours
+                        .Select(c => Voronoi.Point(c))
+                        .Where(pnt => Voronoi.InRange(pnt.Cell, IProgressiveVoronoi.Solidity.Solid))
+                        .Where(pnt => pnt.Solidity == IProgressiveVoronoi.Solidity.Vacuum)
+                        .ToList();
 
-                done = 2;
+                    int idx = Random.IntRange(0, expansion_points.Count);
+                    var exp_pnt = expansion_points[idx];
+                    expansion_points.RemoveAt(idx);
+
+                    Voronoi.AddPoint(exp_pnt.Cell);
+                }
+
+                ProgressiveInstantiateMeshes(Voronoi);
+
+                NextUpdate = Time.realtimeSinceStartup + 1;
             }
         }
 
         private void ProgressiveInstantiateMeshes(IProgressiveVoronoi ps)
         {
-            foreach (var mesh in ps.AllPoints
+            foreach (var pnt in ps.AllPoints
                 .Where(p => p.Mesh != null)
-                .Where(p => !InstantiatedMeshes.ContainsKey(p.Mesh))
-                .Select(p => p.Mesh))
+                .Where(p => !InstantiatedMeshes.ContainsKey(p)))
             {
                 var mat = Materials[MaterialIdx];
                 MaterialIdx = (MaterialIdx + 1) % Materials.Count();
 
-                InstantiatedMeshes[mesh] = InstantiateMesh(mesh, mat);
+                InstantiatedMeshes[pnt] = InstantiateMesh(pnt.Mesh, mat);
             }
         }
 

@@ -133,7 +133,36 @@ namespace Growth.Voronoi
             Points[pos].Solidity = solid;
         }
 
+        public IEnumerable<Vec3Int> AllGridNeighbours(Vec3Int pnt)
+        {
+            foreach (var n in pnt.AllNeighbours)
+            {
+                if (InRange(n, IProgressiveVoronoi.Solidity.Vacuum))
+                {
+                    yield return n;
+                }
+            }
+        }
+
         public IEnumerable<IProgressivePoint> AllPoints => Points.Values;
+
+        public bool InRange(Vec3Int cell, IProgressiveVoronoi.Solidity solid)
+        {
+            MyAssert.IsTrue(solid != IProgressiveVoronoi.Solidity.Unknown, "Asking InRange question about unknown solitity");
+
+            // vacuum points are allowed all the way to the edge
+            if (solid == IProgressiveVoronoi.Solidity.Vacuum)
+            {
+                return cell.X >= 0 && cell.X < Size
+                    && cell.Y >= 0 && cell.Y < Size
+                    && cell.Z >= 0 && cell.Z < Size;
+            }
+
+            // solid points must have room for a vacuum point next to them...
+            return cell.X >= 1 && cell.X < Size - 1
+                && cell.Y >= 1 && cell.Y < Size - 1
+                && cell.Z >= 1 && cell.Z < Size - 1;
+        }
 
         #endregion
 
@@ -342,35 +371,6 @@ namespace Growth.Voronoi
                 cell.X + Random.FloatRange(-1f / 10, 1f / 10) + 0.5f,
                 cell.Y + Random.FloatRange(-1f / 10, 1f / 10) + 0.5f,
                 cell.Z + Random.FloatRange(-1f / 10, 1f / 10) + 0.5f);
-        }
-
-        IEnumerable<Vec3Int> AllGridNeighbours(Vec3Int pnt)
-        {
-            foreach (var n in pnt.AllNeighbours)
-            {
-                if (InRange(n, IProgressiveVoronoi.Solidity.Vacuum))
-                {
-                    yield return n;
-                }
-            }
-        }
-
-        bool InRange(Vec3Int cell, IProgressiveVoronoi.Solidity solid)
-        {
-            MyAssert.IsTrue(solid != IProgressiveVoronoi.Solidity.Unknown, "Asking InRange question about unknown solitity");
-
-            // vacuum points are allowed all the way to the edge
-            if (solid == IProgressiveVoronoi.Solidity.Vacuum)
-            {
-                return cell.X >= 0 && cell.X < Size
-                    && cell.Y >= 0 && cell.Y < Size
-                    && cell.Z >= 0 && cell.Z < Size;
-            }
-
-            // solid points must have room for a vacuum point next to them...
-            return cell.X >= 1 && cell.X < Size - 1
-                && cell.Y >= 1 && cell.Y < Size - 1
-                && cell.Z >= 1 && cell.Z < Size - 1;
         }
     }
 }

@@ -38,7 +38,12 @@ namespace Growth.Voronoi
         IProgressivePoint Point(Vec3Int pos);
         void SetSolidity(Vec3Int pos, Solidity solid);
 
+        public IEnumerable<Vec3Int> AllGridNeighbours(Vec3Int pnt);
+
         IEnumerable<IProgressivePoint> AllPoints { get; }
+
+        bool InRange(Vec3Int cell, IProgressiveVoronoi.Solidity solid);     // "vacuum" cells can go right up to the edge
+                                                                            // "solid" cells must remain 1 inside that
     }
 
     public interface IProgressivePoint
