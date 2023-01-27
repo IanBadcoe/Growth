@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Assertions;
 using Growth.Util;
 
 namespace Growth
@@ -103,7 +102,7 @@ public class CellBhv : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Assert.IsTrue(Inited);
+        MyAssert.IsTrue(Inited, "Initialised");
 
         Cycler++;
 

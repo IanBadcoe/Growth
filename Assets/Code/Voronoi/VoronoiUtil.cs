@@ -114,7 +114,7 @@ namespace Growth.Voronoi
             return v;
         }
 
-        public static IProgressiveVoronoi CreateProgressiveVoronoi(float size, float tolerance, ClRand random)
+        public static IProgressiveVoronoi CreateProgressiveVoronoi(int size, float tolerance, ClRand random)
         {
             return new ProgressiveVoronoi(size, tolerance, random);
         }

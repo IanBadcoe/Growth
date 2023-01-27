@@ -30,7 +30,7 @@ namespace Growth.Util
         {
             var now = Time.realtimeSinceStartup;
 
-            Debug.Assert(name == Stack.Last().Item1);
+            MyAssert.IsTrue(name == Stack.Last().Item1, "Trying to pop item which is not the top of the stack");
 
             var entry = Stack.Last();
             Stack.RemoveAt(Stack.Count - 1);

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Assertions;
 using Growth.Util;
 
 namespace Growth {
@@ -126,7 +125,7 @@ public class CellGridBhv : MonoBehaviour
 
     public GameObject Instantiate(GameObject prefab, Vector3Int pos)
     {
-        Assert.IsNotNull(prefab.GetComponent<CellBhv>());
+        MyAssert.IsTrue(prefab.GetComponent<CellBhv>() != null, "Cell object must use CellBhv");
 
         GameObject go = Instantiate(prefab, pos, Quaternion.identity, CellsContainer.transform);
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Growth.Util;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -112,7 +113,7 @@ namespace Growth.Voronoi
 
             foreach (var c in verts)
             {
-                Debug.Assert(b.Contains(c));
+                MyAssert.IsTrue(b.Contains(c), "Constructed vert outside bounds");
             }
 
             // build an encapsulating tetrahedron, using whichever axis is longest, and padding by 1 on each dimension
@@ -134,15 +135,15 @@ namespace Growth.Voronoi
 
             foreach (var c in b.Corners)
             {
-                Debug.Assert(bounding_tet.Sphere.Contains(c, 0));
+                MyAssert.IsTrue(bounding_tet.Sphere.Contains(c, 0), "Corner not in circumsphere");
             }
             foreach (var c in new Vec3[] {c0, c1, c2, c3})
             {
-                Debug.Assert(bounding_tet.Sphere.Contains(c, 0));
+                MyAssert.IsTrue(bounding_tet.Sphere.Contains(c, 0), "Corner not in circumsphere");
             }
             foreach (var c in verts)
             {
-                Debug.Assert(bounding_tet.Sphere.Contains(c, 0));
+                MyAssert.IsTrue(bounding_tet.Sphere.Contains(c, 0), "Corner not in circumsphere");
             }
 
 
@@ -164,10 +165,10 @@ namespace Growth.Voronoi
 
             TetsRW.RemoveAll(tet => encapsulating_vert_tets.Contains(tet));
 
-            UnityEngine.Debug.Assert(!Verts.Contains(c0));
-            UnityEngine.Debug.Assert(!Verts.Contains(c1));
-            UnityEngine.Debug.Assert(!Verts.Contains(c2));
-            UnityEngine.Debug.Assert(!Verts.Contains(c3));
+            MyAssert.IsTrue(!Verts.Contains(c0), "Initial vert not found");
+            MyAssert.IsTrue(!Verts.Contains(c1), "Initial vert not found");
+            MyAssert.IsTrue(!Verts.Contains(c2), "Initial vert not found");
+            MyAssert.IsTrue(!Verts.Contains(c3), "Initial vert not found");
         }
 
         public void TagVert(Vec3 v, string tag)

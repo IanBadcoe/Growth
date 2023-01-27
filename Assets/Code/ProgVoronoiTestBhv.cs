@@ -12,64 +12,63 @@ namespace Growth
     {
         public GameObject MeshContainer;
         public GameObject MeshTemplate;
+
         public List<Material> Materials;
+        int MaterialIdx = 0;
+
         public int RSeed;
 
-        bool done = false;
+        int done = 0;
+
+        IProgressiveVoronoi v = null;
+
+        Dictionary<Mesh, GameObject> InstantiatedMeshes = new Dictionary<Mesh, GameObject>();
+
         // Use this for initialization
         void Update()
         {
-            if (!done && Input.GetKey(KeyCode.Space))
+            if (done == 0 && Input.GetKey(KeyCode.Space))
             {
-                IProgressiveVoronoi v = VoronoiUtil.CreateProgressiveVoronoi(10, 1e-3f, new ClRand(RSeed));
+                v = VoronoiUtil.CreateProgressiveVoronoi(10, 1e-3f, new ClRand(RSeed));
 
-                v.AddPoint(new Vec3Int(0, 0, 0));
+                v.AddPoint(new Vec3Int(5, 5, 6));
 
-                GenerateMeshes(v);
+                ProgressiveInstantiateMeshes(v);
 
-                done = true;
+                done = 1;
+            }
+            else if (done == 1 && Input.GetKey(KeyCode.Space))
+            {
+                v.AddPoint(new Vec3Int(5, 5, 7));
+
+                ProgressiveInstantiateMeshes(v);
+
+                done = 2;
             }
         }
 
-        private void GenerateMeshes(IPolyhedronSet ps)
+        private void ProgressiveInstantiateMeshes(IProgressiveVoronoi ps)
         {
-            int i = 0;
-            foreach (var poly in ps.Polyhedrons)
+            foreach (var mesh in ps.AllPoints
+                .Where(p => p.Mesh != null)
+                .Where(p => !InstantiatedMeshes.ContainsKey(p.Mesh))
+                .Select(p => p.Mesh))
             {
-                var mat = Materials[i];
-                i = (i + 1) % Materials.Count();
+                var mat = Materials[MaterialIdx];
+                MaterialIdx = (MaterialIdx + 1) % Materials.Count();
 
-                GenerateMesh(poly, mat);
+                InstantiatedMeshes[mesh] = InstantiateMesh(mesh, mat);
             }
         }
 
-        private void GenerateMesh(IVPolyhedron poly, Material mat)
+        private GameObject InstantiateMesh(Mesh mesh, Material mat)
         {
-            var mesh = new Mesh();
-
-            Vector3[] verts = poly.Verts.Select(v => v.ToVector3()).ToArray();
-            mesh.vertices = verts;
-
-            List<int> tris = new List<int>();
-
-            var v3_verts = poly.Verts.ToArray();
-
-            foreach (var face in poly.Faces)
-            {
-                List<int> vert_idxs = face.Verts.Select(v => Array.IndexOf(v3_verts, v)).ToList();
-
-                for (int i = 1; i < vert_idxs.Count - 1; i++)
-                {
-                    tris.AddRange(new int[] { vert_idxs[0], vert_idxs[i], vert_idxs[i + 1] });
-                }
-            }
-
-            mesh.triangles = tris.ToArray();
-
             var go = Instantiate(MeshTemplate, MeshContainer.transform);
 
             go.GetComponent<MeshFilter>().mesh = mesh;
             go.GetComponent<MeshRenderer>().material = mat;
+
+            return go;
         }
     }
 

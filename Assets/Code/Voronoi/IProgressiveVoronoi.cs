@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Growth.Voronoi
 {
@@ -36,6 +37,8 @@ namespace Growth.Voronoi
                                                     // which are only there for us, they need to delete too...
         IProgressivePoint Point(Vec3Int pos);
         void SetSolidity(Vec3Int pos, Solidity solid);
+
+        IEnumerable<IProgressivePoint> AllPoints { get; }
     }
 
     public interface IProgressivePoint

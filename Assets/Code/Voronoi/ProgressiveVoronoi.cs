@@ -26,7 +26,29 @@ namespace Growth.Voronoi
 
         public VPolyhedron PolyhedronRW { get; set; }
 
-        public Mesh Mesh { get; set; }
+        private Mesh MeshInner;
+
+        public Mesh Mesh
+        {
+            get
+            {
+                // on-demand mesh generation...
+                if (Polyhedron == null)
+                {
+                    // if we had one once, scrap it
+                    MeshInner = null;
+
+                    return null;
+                }
+
+                if (MeshInner == null)
+                {
+                    MeshInner = MeshUtil.Polyhedron2Mesh(Polyhedron);
+                }
+
+                return MeshInner;
+            }
+        }
 
         public Face FaceWithNeighbour(IProgressivePoint neighbour)
         {
@@ -42,12 +64,12 @@ namespace Growth.Voronoi
 
     class ProgressiveVoronoi : IProgressiveVoronoi
     {
-        readonly float Size;
+        readonly int Size;
         readonly Delaunay Delaunay;
         readonly Dictionary<Vec3Int, ProgressivePoint> Points;
         readonly ClRand Random;
 
-        public ProgressiveVoronoi(float size, float tolerance, ClRand random)
+        public ProgressiveVoronoi(int size, float tolerance, ClRand random)
         {
             Size = size;
             Delaunay = new Delaunay(tolerance);
@@ -58,12 +80,17 @@ namespace Growth.Voronoi
         }
         
         #region IPolyhedronSet
-        public IEnumerable<IVPolyhedron> Polyhedrons => Points.Values.Select(pv => pv.Polyhedron);
+        public IEnumerable<IVPolyhedron> Polyhedrons => Points.Values.Select(pv => pv.Polyhedron).Where(p => p != null);
         #endregion
 
         #region IProgressiveVoronoi
         public void AddPoint(Vec3Int cell)
         {
+            if (!InRange(cell, IProgressiveVoronoi.Solidity.Solid))
+            {
+                throw new ArgumentOutOfRangeException("cell", "solid cells must be 1 cell deep inside the bounds");
+            }
+
             // fill in neighbouring vacuum points, where required, to bound this one...
             // could maybe use only OrthoNeighbour here, but then when adding a diagonal neighbour we
             // might change the shape of this cell, requiring a regeneration of part of it
@@ -72,13 +99,106 @@ namespace Growth.Voronoi
             {
                 if (!pp.Exists)
                 {
-                    AddPointInner(PerturbPoint(pp.Cell), IProgressiveVoronoi.Solidity.Vacuum);
+                    AddPointInner(pp.Cell, PerturbPoint(pp.Cell), IProgressiveVoronoi.Solidity.Vacuum);
                 }
             }
 
-            AddPointInner(PerturbPoint(cell), IProgressiveVoronoi.Solidity.Solid);
+            AddPointInner(cell, PerturbPoint(cell), IProgressiveVoronoi.Solidity.Solid);
 
             GeneratePolyhedron(cell);
+        }
+
+        public IProgressivePoint Point(Vec3Int cell)
+        {
+            ProgressivePoint pp;
+
+            if (Points.TryGetValue(cell, out pp))
+            {
+                return pp;
+            }
+
+            // default ProgressivePoint has Exists = false, and Solitity = Unknown...
+            return new ProgressivePoint(Cell2Vert(cell), cell);
+        }
+
+        public void RemovePoint(Vec3Int position)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void SetSolidity(Vec3Int pos, IProgressiveVoronoi.Solidity solid)
+        {
+            MyAssert.IsTrue(Points.ContainsKey(pos), "Trying to set non-existant point's solidity");
+
+            Points[pos].Solidity = solid;
+        }
+
+        public IEnumerable<IProgressivePoint> AllPoints => Points.Values;
+
+        #endregion
+
+        private void InitialiseDelaunay(int size)
+        {
+            float half_size = size / 2.0f;
+
+            float sphere_radius = Mathf.Sqrt(half_size * half_size * 3);
+
+            float Q = 2f / 9f * 3f / 4f / Mathf.Sqrt(2f / 3f);
+
+            float tet_size = sphere_radius / Q;
+
+            // tet_size is the edge length of the tet
+
+            // tet corners are:
+            //
+            // lower face in XZ plane:
+            // a = (-1/2,  -Q,             -1/3 sqrt(3/4))
+            // b = (+1/2,  -Q,             -1/3 sqrt(3/4))
+            // c = ( 0,    -Q,             +2/3 sqrt(3/4))
+            //
+            // apex on y axis:
+            // d = ( 0,     sqrt(2/3) - Q,  0            )
+            //
+            // e.g. XZ plane
+            //                         ______________________
+            //                        c                  ^   ^
+            //                       /|\                 |   |
+            //                      / | \                |   |
+            //                     /  |  \               |   |
+            //                    /   |   \          2/3 |   |
+            //                   /    |    \             |   |
+            //                1 /     |     \ 1          |   | sqrt(3/4)
+            //                 /      |      \           v   |
+            //   (x = 0) -----/-------d       \ ---------    |
+            //               /        |(above) \         ^   |
+            //              /         |         \    1/3 |   |
+            //             a__________|__________b_______v___v
+            //                 1/2    |    1/2
+            //                        |
+            //                         (z = 0)
+            //
+            // and then we'll scale all that up by tet_size
+
+
+            Vec3 a = new Vec3(-1f / 2, -Q, -1f / 3 * Mathf.Sqrt(3f / 4));
+            Vec3 b = new Vec3(+1f / 2, -Q, -1f / 3 * Mathf.Sqrt(3f / 4));
+            Vec3 c = new Vec3(0, -Q, 2f / 3 * Mathf.Sqrt(3f / 4));
+            Vec3 d = new Vec3(0, Mathf.Sqrt(2f / 3) - Q, 0);
+
+            a *= tet_size;
+            b *= tet_size;
+            c *= tet_size;
+            d *= tet_size;
+
+            // translate the tet so that our requested cube is located between 0 and size:
+            var offset = new Vec3(half_size, half_size, half_size);
+
+            a += offset;
+            b += offset;
+            c += offset;
+            d += offset;
+
+            Delaunay.InitialiseWithVerts(new Vec3[] { a, b, c, d });
         }
 
         private void GeneratePolyhedron(Vec3Int cell)
@@ -173,124 +293,50 @@ namespace Growth.Voronoi
                 .Select(vert => Points[Vert2Cell(vert)]);
         }
 
+        private void AddPointInner(Vec3Int cell, Vec3 pnt, IProgressiveVoronoi.Solidity solid)
+        {
+            MyAssert.IsTrue(solid != IProgressiveVoronoi.Solidity.Unknown, "Trying to set point with unknown solitity");
+
+            if (Points.ContainsKey(cell))
+            {
+                SetSolidity(cell, solid);
+            }
+            else
+            {
+                var pp = new ProgressivePoint(pnt, cell);
+                pp.Exists = true;
+                pp.Solidity = solid;
+
+                Points[cell] = pp;
+
+                MyAssert.IsTrue(Points.ContainsKey(Vert2Cell(pnt)), "Added a point but now cannot find it");
+
+                Delaunay.AddVert(pnt);
+            }
+        }
+
         private Vec3Int Vert2Cell(Vec3 vert)
         {
-            // unit-scale and no -ves as yet...
+            // unit-scale for the moment...
             return vert.ToVec3Int();
         }
 
-        private ProgressivePoint AddPointInner(Vec3 pnt, IProgressiveVoronoi.Solidity solid)
+        private Vec3 Cell2Vert(Vec3Int cell)
         {
-            Debug.Assert(solid != IProgressiveVoronoi.Solidity.Unknown);
+            // this is giving a "fake" vert, for a cell that doesn't contain one for us to look-up
+            // so return the cell centre
 
-            // for the moment we jsut truncate (and we have no -ve values, so no problem)
-            // want to try and keep it so that if the grid scale changes, or we get -ves, or whatever
-            // about the grid, just changing Vert2Cell will fix things...
-            //
-            // (the reverse lookup comes from Points...)
-            var cell = Vert2Cell(pnt);
-
-            // should not try to add one we already have...
-            Debug.Assert(!Points.ContainsKey(cell));
-
-            var pp = new ProgressivePoint(pnt, cell);
-            pp.Exists = true;
-            pp.Solidity = solid;
-
-            Points[cell] = pp;
-
-            Delaunay.AddVert(pnt);
-
-            return pp;
+            // unit-scale for the moment
+            return new Vec3(cell.X + 0.5f, cell.Y + 0.5f, cell.Z + 0.5f);
         }
 
         private Vec3 PerturbPoint(Vec3Int cell)
         {
             // our point is in the centre of the cell +/- a randomisation
             return new Vec3(
-                cell.X + Random.FloatRange(-1f / 3, 1f / 3) + 0.5f,
-                cell.Y + Random.FloatRange(-1f / 3, 1f / 3) + 0.5f,
-                cell.Z + Random.FloatRange(-1f / 3, 1f / 3) + 0.5f);
-        }
-
-        public IProgressivePoint Point(Vec3Int cell)
-        {
-            ProgressivePoint pp;
-
-            if (Points.TryGetValue(cell, out pp))
-            {
-                return pp;
-            }
-
-            // default ProgressivePoint has Exists = false, and Solitity = Unknown...
-            return new ProgressivePoint(cell.ToVec3(), cell);
-        }
-
-        public void RemovePoint(Vec3Int position)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public void SetSolidity(Vec3Int pos, IProgressiveVoronoi.Solidity solid)
-        {
-            throw new System.NotImplementedException();
-        }
-        #endregion
-
-        private void InitialiseDelaunay(float size)
-        {
-            float half_size = size / 2;
-
-            float sphere_radius = Mathf.Sqrt(half_size * half_size * 3);
-
-            float Q = 2f / 9f * 3f / 4f / Mathf.Sqrt(2f / 3f);
-
-            float tet_size = sphere_radius / Q;
-
-            // tet_size is the edge length of the tet
-
-            // tet corners are:
-            //
-            // lower face in XZ plane:
-            // a = (-1/2,  -Q,             -1/3 sqrt(3/4))
-            // b = (+1/2,  -Q,             -1/3 sqrt(3/4))
-            // c = ( 0,    -Q,             +2/3 sqrt(3/4))
-            //
-            // apex on y axis:
-            // d = ( 0,     sqrt(2/3) - Q,  0            )
-            //
-            // e.g. XZ plane
-            //                         ______________________
-            //                        c                  ^   ^
-            //                       /|\                 |   |
-            //                      / | \                |   |
-            //                     /  |  \               |   |
-            //                    /   |   \          2/3 |   |
-            //                   /    |    \             |   |
-            //                1 /     |     \ 1          |   | sqrt(3/4)
-            //                 /      |      \           v   |
-            //   (x = 0) -----/-------d       \ ---------    |
-            //               /        |(above) \         ^   |
-            //              /         |         \    1/3 |   |
-            //             a__________|__________b_______v___v
-            //                 1/2    |    1/2
-            //                        |
-            //                         (z = 0)
-            //
-            // and then we'll scale all that up by tet_size
-
-
-            Vec3 a = new Vec3(-1f / 2, -Q, -1f / 3 * Mathf.Sqrt(3f / 4));
-            Vec3 b = new Vec3(+1f / 2, -Q, -1f / 3 * Mathf.Sqrt(3f / 4));
-            Vec3 c = new Vec3(0, -Q, 2f / 3 * Mathf.Sqrt(3f / 4));
-            Vec3 d = new Vec3(0, Mathf.Sqrt(2f / 3) - Q, 0);
-
-            a *= tet_size;
-            b *= tet_size;
-            c *= tet_size;
-            d *= tet_size;
-
-            Delaunay.InitialiseWithVerts(new Vec3[] { a, b, c, d });
+                cell.X + Random.FloatRange(-1f / 10, 1f / 10) + 0.5f,
+                cell.Y + Random.FloatRange(-1f / 10, 1f / 10) + 0.5f,
+                cell.Z + Random.FloatRange(-1f / 10, 1f / 10) + 0.5f);
         }
 
         IEnumerable<Vec3Int> AllGridNeighbours(Vec3Int pnt)
@@ -304,22 +350,22 @@ namespace Growth.Voronoi
             }
         }
 
-        bool InRange(Vec3Int pnt, IProgressiveVoronoi.Solidity solid)
+        bool InRange(Vec3Int cell, IProgressiveVoronoi.Solidity solid)
         {
-            Debug.Assert(solid != IProgressiveVoronoi.Solidity.Unknown);
+            MyAssert.IsTrue(solid != IProgressiveVoronoi.Solidity.Unknown, "Asking InRange question about unknown solitity");
 
             // vacuum points are allowed all the way to the edge
             if (solid == IProgressiveVoronoi.Solidity.Vacuum)
             {
-                return pnt.X >= 0 && pnt.X < Size
-                    && pnt.Y >= 0 && pnt.Y < Size
-                    && pnt.Z >= 0 && pnt.Z < Size;
+                return cell.X >= 0 && cell.X < Size
+                    && cell.Y >= 0 && cell.Y < Size
+                    && cell.Z >= 0 && cell.Z < Size;
             }
 
             // solid points must have room for a vacuum point next to them...
-            return pnt.X >= 1 && pnt.X < Size - 1
-                && pnt.Y >= 1 && pnt.Y < Size - 1
-                && pnt.Z >= 1 && pnt.Z < Size - 1;
+            return cell.X >= 1 && cell.X < Size - 1
+                && cell.Y >= 1 && cell.Y < Size - 1
+                && cell.Z >= 1 && cell.Z < Size - 1;
         }
     }
 }
