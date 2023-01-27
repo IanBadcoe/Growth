@@ -45,7 +45,7 @@ namespace Growth
             {
                 if (!Voronoi.AllPoints.Any())
                 {
-                    Voronoi.AddPoint(new Vec3Int(5, 5, 6));
+                    Voronoi.AddPoint(new Vec3Int(5, 5, 5));
                 }
                 else
                 {
@@ -90,15 +90,15 @@ namespace Growth
                 var mat = Materials[MaterialIdx];
                 MaterialIdx = (MaterialIdx + 1) % Materials.Count();
 
-                InstantiatedMeshes[pnt] = InstantiateMesh(pnt.Mesh, mat);
+                InstantiatedMeshes[pnt] = InstantiateMesh(pnt, mat);
             }
         }
 
-        private GameObject InstantiateMesh(Mesh mesh, Material mat)
+        private GameObject InstantiateMesh(IProgressivePoint pnt, Material mat)
         {
-            var go = Instantiate(MeshTemplate, MeshContainer.transform);
+            var go = Instantiate(MeshTemplate, Voronoi.Cell2Vert(pnt.Cell, IProgressiveVoronoi.CellPosition.Origin).ToVector3(), Quaternion.identity, MeshContainer.transform);
 
-            go.GetComponent<MeshFilter>().mesh = mesh;
+            go.GetComponent<MeshFilter>().mesh = pnt.Mesh;
             go.GetComponent<MeshRenderer>().material = mat;
 
             return go;

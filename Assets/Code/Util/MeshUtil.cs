@@ -10,11 +10,15 @@ namespace Growth.Util
 {
     class MeshUtil
     {
-        public static Mesh Polyhedron2Mesh(IVPolyhedron poly)
+        // points are translated to be relative to origin,
+        // so that when we instantiate this we set its position equal to that
+        // and everything lands in the right position
+        // *BUT* the cell position can be read off the GameObject transform
+        public static Mesh Polyhedron2Mesh(IVPolyhedron poly, Vec3 origin)
         {
             var mesh = new Mesh();
 
-            Vector3[] verts = poly.Verts.Select(v => v.ToVector3()).ToArray();
+            Vector3[] verts = poly.Verts.Select(v => (v - origin).ToVector3()).ToArray();
             mesh.vertices = verts;
 
             List<int> tris = new List<int>();

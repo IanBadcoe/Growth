@@ -8,11 +8,14 @@ namespace Growth.Voronoi
 {
     class ProgressivePoint : IProgressivePoint
     {
-        public ProgressivePoint(Vec3 pos, Vec3Int cell)
+        public ProgressivePoint(Vec3 pos, Vec3Int cell, ProgressiveVoronoi pv)
         {
             Position = pos;
             Cell = cell;
+            Voronoi = pv;
         }
+
+        public readonly ProgressiveVoronoi Voronoi;
 
         public bool Exists { get; set; } = false;
 
@@ -43,7 +46,7 @@ namespace Growth.Voronoi
 
                 if (MeshInner == null)
                 {
-                    MeshInner = MeshUtil.Polyhedron2Mesh(Polyhedron);
+                    MeshInner = MeshUtil.Polyhedron2Mesh(Polyhedron, Voronoi.Cell2Vert(Cell, IProgressiveVoronoi.CellPosition.Origin));
                 }
 
                 return MeshInner;
@@ -118,7 +121,7 @@ namespace Growth.Voronoi
             }
 
             // default ProgressivePoint has Exists = false, and Solitity = Unknown...
-            return new ProgressivePoint(Cell2Vert(cell), cell);
+            return new ProgressivePoint(Cell2Vert(cell, IProgressiveVoronoi.CellPosition.Centre), cell, this);
         }
 
         public void RemovePoint(Vec3Int position)
@@ -162,6 +165,26 @@ namespace Growth.Voronoi
             return cell.X >= 1 && cell.X < Size - 1
                 && cell.Y >= 1 && cell.Y < Size - 1
                 && cell.Z >= 1 && cell.Z < Size - 1;
+        }
+
+        public Vec3Int Vert2Cell(Vec3 vert)
+        {
+            // unit-scale for the moment...
+            return vert.ToVec3Int();
+        }
+
+        public Vec3 Cell2Vert(Vec3Int cell, IProgressiveVoronoi.CellPosition pos)
+        {
+            // this is giving a "fake" vert, for a cell that doesn't contain one for us to look-up
+            // so return the cell centre
+
+            // unit-scale for the moment
+            if (pos == IProgressiveVoronoi.CellPosition.Origin)
+            {
+                return cell.ToVec3();
+            }
+
+            return new Vec3(cell.X + 0.5f, cell.Y + 0.5f, cell.Z + 0.5f);
         }
 
         #endregion
@@ -337,7 +360,7 @@ namespace Growth.Voronoi
             }
             else
             {
-                var pp = new ProgressivePoint(pnt, cell);
+                var pp = new ProgressivePoint(pnt, cell, this);
                 pp.Exists = true;
                 pp.Solidity = solid;
 
@@ -349,28 +372,13 @@ namespace Growth.Voronoi
             }
         }
 
-        private Vec3Int Vert2Cell(Vec3 vert)
-        {
-            // unit-scale for the moment...
-            return vert.ToVec3Int();
-        }
-
-        private Vec3 Cell2Vert(Vec3Int cell)
-        {
-            // this is giving a "fake" vert, for a cell that doesn't contain one for us to look-up
-            // so return the cell centre
-
-            // unit-scale for the moment
-            return new Vec3(cell.X + 0.5f, cell.Y + 0.5f, cell.Z + 0.5f);
-        }
-
         private Vec3 PerturbPoint(Vec3Int cell)
         {
             // our point is in the centre of the cell +/- a randomisation
             return new Vec3(
-                cell.X + Random.FloatRange(-1f / 10, 1f / 10) + 0.5f,
-                cell.Y + Random.FloatRange(-1f / 10, 1f / 10) + 0.5f,
-                cell.Z + Random.FloatRange(-1f / 10, 1f / 10) + 0.5f);
+                cell.X + Random.FloatRange(-1f / 7, 1f / 7) + 0.5f,
+                cell.Y + Random.FloatRange(-1f / 7, 1f / 7) + 0.5f,
+                cell.Z + Random.FloatRange(-1f / 7, 1f / 7) + 0.5f);
         }
     }
 }

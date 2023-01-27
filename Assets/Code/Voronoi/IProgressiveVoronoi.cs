@@ -29,6 +29,12 @@ namespace Growth.Voronoi
             Vacuum
         }
 
+        enum CellPosition
+        {
+            Centre,
+            Origin
+        }
+
         void AddPoint(Vec3Int position);            // currently this is implicitly "solid" as we do not need any manual way of adding
                                                     // vacuum points...
         void RemovePoint(Vec3Int position);         // currently a euphemism for setting it vacuum, but want a true delete later
@@ -44,6 +50,8 @@ namespace Growth.Voronoi
 
         bool InRange(Vec3Int cell, IProgressiveVoronoi.Solidity solid);     // "vacuum" cells can go right up to the edge
                                                                             // "solid" cells must remain 1 inside that
+        Vec3 Cell2Vert(Vec3Int cell, CellPosition pos);
+        Vec3Int Vert2Cell(Vec3 vert);
     }
 
     public interface IProgressivePoint
