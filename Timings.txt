@@ -1,0 +1,25 @@
+Base:
+
+Row 0 time 0.4997072
+Row 1 time 0.5829887
+Row 2 time 0.6630135
+Row 3 time 0.7146807
+Row 4 time 0.8781338
+Row 5 time 0.8358498
+Row 6 time 1.059787
+Row 7 time 1.125271
+Row 8 time 1.158762
+Row 9 time 1.322578
+Row 10 time 1.370977
+Row 11 time 1.591187
+Row 12 time 1.522873
+Row 13 time 1.649097
+Row 14 time 1.912939
+Row 15 time 1.822807
+
+Voronoi time 18.71085
+
+Mesh time 0.07516289
+
+
+Total time 18.78601

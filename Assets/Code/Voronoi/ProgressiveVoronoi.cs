@@ -1,4 +1,6 @@
-﻿using Growth.Util;
+﻿#define PROFILE_ON
+
+using Growth.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -108,10 +110,14 @@ namespace Growth.Voronoi
         public void AddPoint(Vec3Int cell,
             IVPolyhedron.MeshType mesh_type, Material material)
         {
+            PoorMansProfiler.Start("AddPoint");
+
             if (!InRange(cell, IProgressiveVoronoi.Solidity.Solid))
             {
                 throw new ArgumentOutOfRangeException("cell", "solid cells must be 1 cell deep inside the bounds");
             }
+
+            PoorMansProfiler.Start("Adding Points");
 
             // fill in neighbouring vacuum points, where required, to bound this one...
             // could maybe use only OrthoNeighbour here, but then when adding a diagonal neighbour we
@@ -130,7 +136,13 @@ namespace Growth.Voronoi
                 IProgressiveVoronoi.Solidity.Solid, mesh_type,
                 material);
 
+            PoorMansProfiler.End("Adding Points");
+
+            PoorMansProfiler.Start("Generate Polyhedron");
             GeneratePolyhedron(npp);
+            PoorMansProfiler.End("Generate Polyhedron");
+
+            PoorMansProfiler.End("AddPoint");
         }
 
         public IProgressivePoint Point(Vec3Int cell)

@@ -1,4 +1,7 @@
-﻿using System;
+﻿// define this in the files which are to be profiled...
+//#define PROFILE_ON
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,12 +16,14 @@ namespace Growth.Util
 
         static List<Tuple<String, float>> Stack = new List<Tuple<string, float>>();
 
+        [System.Diagnostics.Conditional("PROFILE_ON")]
         public static void Reset()
         {
             CumulativeTimings = new Dictionary<string, float>();
             Stack = new List<Tuple<string, float>>();
         }
 
+        [System.Diagnostics.Conditional("PROFILE_ON")]
         public static void Start(String name)
         {
             var now = Time.realtimeSinceStartup;
@@ -26,6 +31,7 @@ namespace Growth.Util
             Stack.Add(new Tuple<String, float>(name, now));
         }
 
+        [System.Diagnostics.Conditional("PROFILE_ON")]
         public static void End(String name)
         {
             var now = Time.realtimeSinceStartup;
@@ -49,22 +55,32 @@ namespace Growth.Util
 
             CumulativeTimings[name] += time;
         }
-    }
 
-    public class ProfileSection : IDisposable
-    {
-        String Name { get; }
-
-        public ProfileSection(String name)
+        [System.Diagnostics.Conditional("PROFILE_ON")]
+        public static void Dump()
         {
-            Name = name;
-            PoorMansProfiler.Start(name);
-        }
-
-        // fairly sure I do not need the "Dispose Pattern" if I am just using this for RAII in "using" statements
-        public void Dispose()
-        {
-            PoorMansProfiler.End(Name);
+            foreach(var pair in CumulativeTimings)
+            {
+                System.Diagnostics.Debug.Write($"{pair.Key}\t->\t{pair.Value}");
+            }
         }
     }
+
+    // neater for code to use the raw Start/End calls and not force extra nesting on things with using(){}...
+    //public class ProfileSection : IDisposable
+    //{
+    //    String Name { get; }
+
+    //    public ProfileSection(String name)
+    //    {
+    //        Name = name;
+    //        PoorMansProfiler.Start(name);
+    //    }
+
+    //    // fairly sure I do not need the "Dispose Pattern" if I am just using this for RAII in "using" statements
+    //    public void Dispose()
+    //    {
+    //        PoorMansProfiler.End(Name);
+    //    }
+    //}
 }
