@@ -297,11 +297,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6960108125073814809, guid: 060347027a2db654b9db928efce2c41a, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6960108125073814809, guid: 060347027a2db654b9db928efce2c41a, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -10
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6960108125073814809, guid: 060347027a2db654b9db928efce2c41a, type: 3}
       propertyPath: m_LocalRotation.w
@@ -372,3 +372,4 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 5e38fb391fd995f42a8002294591654e, type: 2}
   - {fileID: 2100000, guid: 630abf2a6da8e4f4b9513fc26613cfb6, type: 2}
   - {fileID: 2100000, guid: 435d8b5018c61fd4a9c26dabafe7afa6, type: 2}
+  RSeed: 0

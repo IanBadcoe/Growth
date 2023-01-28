@@ -30,7 +30,7 @@ namespace Growth
         void Start()
         {
             Random = new ClRand(RSeed);
-            Voronoi = VoronoiUtil.CreateProgressiveVoronoi(10, 1e-3f, Random.NewClRand());
+            Voronoi = VoronoiUtil.CreateProgressiveVoronoi(10, 1e-3f, 0.15f, Random.NewClRand());
         }
 
         // Use this for initialization

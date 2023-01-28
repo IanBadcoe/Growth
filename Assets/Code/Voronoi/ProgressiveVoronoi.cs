@@ -8,13 +8,6 @@ namespace Growth.Voronoi
 {
     class ProgressivePoint : IProgressivePoint
     {
-        public ProgressivePoint(Vec3 pos, Vec3Int cell, ProgressiveVoronoi pv)
-        {
-            Position = pos;
-            Cell = cell;
-            Voronoi = pv;
-        }
-
         public readonly ProgressiveVoronoi Voronoi;
 
         public bool Exists { get; set; } = false;
@@ -30,6 +23,15 @@ namespace Growth.Voronoi
         public VPolyhedron PolyhedronRW { get; set; }
 
         private Mesh MeshInner;
+
+        public Dictionary<IProgressivePoint, Face> FacesMap = new Dictionary<IProgressivePoint, Face>();
+
+        public ProgressivePoint(Vec3 pos, Vec3Int cell, ProgressiveVoronoi pv)
+        {
+            Position = pos;
+            Cell = cell;
+            Voronoi = pv;
+        }
 
         public Mesh Mesh
         {
@@ -53,7 +55,6 @@ namespace Growth.Voronoi
             }
         }
 
-
         public Face FaceWithNeighbour(IProgressivePoint neighbour)
         {
             Face ret = null;
@@ -62,8 +63,6 @@ namespace Growth.Voronoi
 
             return ret;
         }
-
-        public Dictionary<IProgressivePoint, Face> FacesMap = new Dictionary<IProgressivePoint, Face>();
     }
 
     class ProgressiveVoronoi : IProgressiveVoronoi
@@ -72,13 +71,19 @@ namespace Growth.Voronoi
         readonly Delaunay Delaunay;
         readonly Dictionary<Vec3Int, ProgressivePoint> Points;
         readonly ClRand Random;
+        readonly List<Vec3> PolyVerts;     // these are the polygon/polyhedron verts
+                                           // just kept here so we can merge those which are too close together
+                                           // to help eliminate degenerate polygons
+        readonly float Perturbation;
 
-        public ProgressiveVoronoi(int size, float tolerance, ClRand random)
+        public ProgressiveVoronoi(int size, float tolerance, float perturbation, ClRand random)
         {
             Size = size;
             Delaunay = new Delaunay(tolerance);
             Points = new Dictionary<Vec3Int, ProgressivePoint>();
             Random = random;
+            PolyVerts = new List<Vec3>();
+            Perturbation = perturbation;
 
             InitialiseDelaunay(size);
         }
@@ -277,28 +282,34 @@ namespace Growth.Voronoi
 
                 if (face == null)
                 {
-                    face = CreateFace(point.Position, neighbour.Position);
+                    face = TryCreateFace(point.Position, neighbour.Position);
 
-                    // in here, we are a new face to the neighbour as well...
-                    neighbour.FacesMap[point] = face;
-                }
+                    if (face != null)
+                    {
+                        // in here, we are a new face to the neighbour as well...
+                        neighbour.FacesMap[point] = face;
+                    }                }
                 else
                 {
                     // the face our neighbour has is backwards compared to what we want...
                     face = face.Reversed();
                 }
 
-                point.FacesMap[neighbour] = face;
+                if (face != null)
+                {
+                    point.FacesMap[neighbour] = face;
 
-                point.PolyhedronRW.AddFace(face);
+                    point.PolyhedronRW.AddFace(face);
 
-                // currently our use-case is building a poly for one (new) point at a time,
-                // so no need to add the face to any poly on the neighbour
-                // but other types of update might need that in time...
+                    // currently our use-case is building a poly for one (new) point at a time,
+                    // so no need to add the face to any poly on the neighbour
+                    // but other types of update might need that in time...
+                }
             }
         }
 
-        private Face CreateFace(Vec3 our_point, Vec3 other_point)
+        // can return null for a degenerate face
+        private Face TryCreateFace(Vec3 our_point, Vec3 other_point)
         {
             // find all the tets that use this edge
             var edge_tets = Delaunay.Tets.Where(tet => tet.UsesVert(our_point) && tet.UsesVert(other_point)).ToList();
@@ -330,18 +341,85 @@ namespace Growth.Voronoi
             }
             while (current_tet != null);
 
-            // could, here, eliminate any face_verts which are identical (or within a tolerance) of the previous
+            // eliminate any face_verts which are identical (or within a tolerance) of the previous
             // but (i) with randomized seed data we do not expect that to happen much and (ii) all ignoring this does is add degenerate
             // polys/edges to the output, which I do not think will be a problem at the moment
 
-            // if it does become a problem, probably handle it by AddFind'ing all verts into a set stored on this Voronoi
-            // and then using the resulting indices to eliminate duplicates, before looking up the actual coords
-            // as this should yield the same results no matter what poly we are testing and/or what order its verts are in
+            // first: AddFind all verts into a set stored on this Voronoi
+            for (int i = 0; i < face_verts.Count; i++)
+            {
+                var v_here = face_verts[i];
 
-            // if we do that, then input points (d.Verts) which are neighbours become such by virtue of still having
-            // a common face after this process, NOT because the Delaunay said they were (e.g. they are technically Delaunay-neighbours
-            // but the contact polygon is of negligeable area so the neighbour-ness can be ignored, it is only as if the
-            // two points were minutely further apart in the first place...)
+                var closest_data = PolyVerts.Aggregate(new Tuple<float, Vec3>(float.MaxValue, v_here), (acc, v) =>
+                {
+                    var v_d2 = (v_here - v).Length2();
+
+                    // if this is closer than the current best, and also closer than our tolerance
+                    // swap it into the accumulator
+                    if (v_d2 < acc.Item1
+                        && v_d2 < Delaunay.Tolerance * Delaunay.Tolerance)
+                    {
+                        return new Tuple<float, Vec3>(v_d2, v);
+                    }
+
+                    return acc;
+                });
+
+                // if we already had a point close to this one, swap that in
+                // otherwise add the new point into the set
+                //
+                // use distance comparison here, because if we get a precise hit, the vec3 reference/value compare
+                // will match, but we do not need to insert into PolyVerts
+                if (closest_data.Item1 != float.MaxValue)
+                {
+                    face_verts[i] = closest_data.Item2;
+                }
+                else
+                {
+                    PolyVerts.Add(v_here);
+                }
+            }
+
+            // now eliminate any duplicates in the vert list...
+
+            var prev = face_verts.Last();
+
+            for(int i = 0; i < face_verts.Count;)
+            {
+                Vec3 v_here = face_verts[i];
+
+                if (prev == v_here)
+                {
+                    face_verts.RemoveAt(i);
+                }
+                else
+                {
+                    i++;
+                    prev = v_here;
+                }
+            }
+
+            // now, input points (Delaunay.Verts) which are neighbours become such by virtue of still having
+            // a common face after this process of eliminating tiny edges/degenerate polys,
+            // NOT just because the Delaunay said they were
+            //
+            // (e.g. they are technically Delaunay-neighbours but the contact polygon is of negligeable area
+            // so the neighbour-ness can be ignored, it is only as if the two points were minutely further apart
+            // in the first place...)
+            //
+            // we may get tiny cracks between polys as a result, but the polys themselves should still be closed...
+
+            if (face_verts.Count < 3)
+            {
+                return null;
+            }
+
+            // can still have faces with tiny area, e.g. very long thin triangles with a vert in the middle,
+            // but those are hard to eliminate because the middle vert needs to disappear on this poly
+            // but probably _not_ on its neighbour
+            //
+            // and I think all that happens with those is we do not know which was round to draw them, 
+            // but they are all but invisible anyway...
 
             return new Face(face_verts, (other_point - our_point).Normalised());
         }
@@ -382,9 +460,9 @@ namespace Growth.Voronoi
         {
             // our point is in the centre of the cell +/- a randomisation
             return new Vec3(
-                cell.X + /*Random.FloatRange(-1f / 7, 1f / 7) +*/ 0.5f,
-                cell.Y + /*Random.FloatRange(-1f / 7, 1f / 7) +*/ 0.5f,
-                cell.Z + /*Random.FloatRange(-1f / 7, 1f / 7) +*/ 0.5f);
+                cell.X + Random.FloatRange(-Perturbation, Perturbation) + 0.5f,
+                cell.Y + Random.FloatRange(-Perturbation, Perturbation) + 0.5f,
+                cell.Z + Random.FloatRange(-Perturbation, Perturbation) + 0.5f);
         }
     }
 }
