@@ -36,14 +36,15 @@ namespace Growth.Voronoi
             Origin
         }
 
-        void AddPoint(Vec3Int position);            // currently this is implicitly "solid" as we do not need any manual way of adding
-                                                                                    // vacuum points...
+        void AddPoint(Vec3Int position,             // currently this is implicitly "solid" as we do not need any manual way of adding
+            IVPolyhedron.MeshType mesh_type,        // vacuum points...
+            Material material);                 
+                                                
         void RemovePoint(Vec3Int position);         // currently a euphemism for setting it vacuum, but want a true delete later
                                                     // will need to make that "smart" in that if we are a bound of a point which is still
                                                     // solid, then we need not to delete, and similarly, if we have vacuum neighbours
                                                     // which are only there for us, they need to delete too...
         IProgressivePoint Point(Vec3Int pos);
-        void SetSolidity(Vec3Int pos, Solidity solid);
 
         public IEnumerable<Vec3Int> AllGridNeighbours(Vec3Int pnt);
 
@@ -64,5 +65,7 @@ namespace Growth.Voronoi
         IVPolyhedron Polyhedron { get; }
         Face FaceWithNeighbour(IProgressivePoint neighbour);
         Mesh Mesh { get; }
+        IVPolyhedron.MeshType MeshType { get; }
+        Material Material { get; }
     }
 }

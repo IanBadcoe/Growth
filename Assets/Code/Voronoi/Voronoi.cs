@@ -136,7 +136,7 @@ namespace Growth.Voronoi
 
                     if (!RegionsRW.TryGetValue(v1, out v1_poly))
                     {
-                        v1_poly = new VPolyhedron(v1);
+                        v1_poly = new VPolyhedron(v1, IVPolyhedron.MeshType.Smooth);
                         RegionsRW[v1] = v1_poly;
                     }
 
@@ -147,7 +147,7 @@ namespace Growth.Voronoi
                     {
                         if (!RegionsRW.TryGetValue(v2, out v2_poly))
                         {
-                            v2_poly = new VPolyhedron(v2);
+                            v2_poly = new VPolyhedron(v2, IVPolyhedron.MeshType.Smooth);
                             RegionsRW[v2] = v2_poly;
                         }
 

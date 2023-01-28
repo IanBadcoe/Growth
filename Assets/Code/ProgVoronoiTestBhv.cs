@@ -43,9 +43,14 @@ namespace Growth
 
             if (running && Time.realtimeSinceStartup > NextUpdate)
             {
+                Material material = Materials[MaterialIdx];
+                IVPolyhedron.MeshType mesh_type = MaterialIdx > 1 ? IVPolyhedron.MeshType.Faces : IVPolyhedron.MeshType.Smooth;
+                MaterialIdx = (MaterialIdx + 1) % Materials.Count;
+
                 if (!Voronoi.AllPoints.Any())
                 {
-                    Voronoi.AddPoint(new Vec3Int(5, 5, 5));
+                    Voronoi.AddPoint(new Vec3Int(5, 5, 5),
+                        mesh_type, material);
                 }
                 else
                 {
@@ -67,7 +72,8 @@ namespace Growth
                             var exp_pnt = expansion_points[idx];
                             expansion_points.RemoveAt(idx);
 
-                            Voronoi.AddPoint(exp_pnt.Cell);
+                            Voronoi.AddPoint(exp_pnt.Cell,
+                                mesh_type, material);
 
                             done = true;
                         }
@@ -87,7 +93,7 @@ namespace Growth
                 .Where(p => p.Mesh != null)
                 .Where(p => !InstantiatedMeshes.ContainsKey(p)))
             {
-                var mat = Materials[MaterialIdx];
+                var mat = pnt.Material;
                 MaterialIdx = (MaterialIdx + 1) % Materials.Count();
 
                 InstantiatedMeshes[pnt] = InstantiateMesh(pnt, mat);

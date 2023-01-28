@@ -8,10 +8,11 @@ namespace Growth.Voronoi
     [DebuggerDisplay("Faces: {Faces.Count} Verts {Verts.Count}")]
     public class VPolyhedron : IVPolyhedron
     {
-        public VPolyhedron(Vec3 centre)
+        public VPolyhedron(Vec3 centre, IVPolyhedron.MeshType type)
         {
             Centre = centre;
             FacesRW = new List<Face>();
+            Type = type;
         }
 
         List<Face> FacesRW;
@@ -20,6 +21,7 @@ namespace Growth.Voronoi
         public IReadOnlyList<Face> Faces => FacesRW;
         public IReadOnlyList<Vec3> Verts => Faces.SelectMany(f => f.Verts).Distinct().ToList();
         public Vec3 Centre { get; }
+        public IVPolyhedron.MeshType Type { get; }
         #endregion
 
         public void AddFace(Face face)
@@ -32,7 +34,7 @@ namespace Growth.Voronoi
 
         public static VPolyhedron Cube(float size)
         {
-            var ret = new VPolyhedron(new Vec3(0, 0, 0));
+            var ret = new VPolyhedron(new Vec3(0, 0, 0), IVPolyhedron.MeshType.Faces);
 
             float hs = size / 2;
 

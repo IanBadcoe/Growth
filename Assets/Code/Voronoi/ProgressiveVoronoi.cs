@@ -8,8 +8,22 @@ namespace Growth.Voronoi
 {
     class ProgressivePoint : IProgressivePoint
     {
+        public ProgressivePoint(Vec3 pos,
+            Vec3Int cell,
+            ProgressiveVoronoi pv,
+            IVPolyhedron.MeshType mesh_type,
+            Material material)
+        {
+            Position = pos;
+            Cell = cell;
+            Voronoi = pv;
+            MeshType = mesh_type;
+            Material = material;
+        }
+        
         public readonly ProgressiveVoronoi Voronoi;
 
+        #region IProgressivePoint
         public bool Exists { get; set; } = false;
 
         public Vec3 Position { get; }
@@ -20,17 +34,13 @@ namespace Growth.Voronoi
 
         public IVPolyhedron Polyhedron => PolyhedronRW;
 
-        public VPolyhedron PolyhedronRW { get; set; }
-
-        private Mesh MeshInner;
-
-        public Dictionary<IProgressivePoint, Face> FacesMap = new Dictionary<IProgressivePoint, Face>();
-
-        public ProgressivePoint(Vec3 pos, Vec3Int cell, ProgressiveVoronoi pv)
+        public Face FaceWithNeighbour(IProgressivePoint neighbour)
         {
-            Position = pos;
-            Cell = cell;
-            Voronoi = pv;
+            Face ret = null;
+
+            FacesMap.TryGetValue(neighbour, out ret);
+
+            return ret;
         }
 
         public Mesh Mesh
@@ -55,14 +65,16 @@ namespace Growth.Voronoi
             }
         }
 
-        public Face FaceWithNeighbour(IProgressivePoint neighbour)
-        {
-            Face ret = null;
+        public IVPolyhedron.MeshType MeshType { get; set; }
 
-            FacesMap.TryGetValue(neighbour, out ret);
+        public Material Material { get; set; }
+        #endregion
 
-            return ret;
-        }
+        public VPolyhedron PolyhedronRW { get; set; }
+
+        private Mesh MeshInner;
+
+        public Dictionary<IProgressivePoint, Face> FacesMap = new Dictionary<IProgressivePoint, Face>();
     }
 
     class ProgressiveVoronoi : IProgressiveVoronoi
@@ -93,7 +105,8 @@ namespace Growth.Voronoi
         #endregion
 
         #region IProgressiveVoronoi
-        public void AddPoint(Vec3Int cell)
+        public void AddPoint(Vec3Int cell,
+            IVPolyhedron.MeshType mesh_type, Material material)
         {
             if (!InRange(cell, IProgressiveVoronoi.Solidity.Solid))
             {
@@ -108,13 +121,16 @@ namespace Growth.Voronoi
             {
                 if (!pp.Exists)
                 {
-                    AddPointInner(pp.Cell, PerturbPoint(pp.Cell), IProgressiveVoronoi.Solidity.Vacuum);
+                    AddPointInner(pp.Cell, PerturbPoint(pp.Cell), IProgressiveVoronoi.Solidity.Vacuum,
+                        IVPolyhedron.MeshType.Unknown, null);
                 }
             }
 
-            AddPointInner(cell, PerturbPoint(cell), IProgressiveVoronoi.Solidity.Solid);
+            var npp = AddPointInner(cell, PerturbPoint(cell),
+                IProgressiveVoronoi.Solidity.Solid, mesh_type,
+                material);
 
-            GeneratePolyhedron(cell);
+            GeneratePolyhedron(npp);
         }
 
         public IProgressivePoint Point(Vec3Int cell)
@@ -127,19 +143,12 @@ namespace Growth.Voronoi
             }
 
             // default ProgressivePoint has Exists = false, and Solitity = Unknown...
-            return new ProgressivePoint(Cell2Vert(cell, IProgressiveVoronoi.CellPosition.Centre), cell, this);
+            return new ProgressivePoint(Cell2Vert(cell, IProgressiveVoronoi.CellPosition.Centre), cell, this, IVPolyhedron.MeshType.Unknown, null);
         }
 
         public void RemovePoint(Vec3Int position)
         {
             throw new System.NotImplementedException();
-        }
-
-        public void SetSolidity(Vec3Int pos, IProgressiveVoronoi.Solidity solid)
-        {
-            MyAssert.IsTrue(Points.ContainsKey(pos), "Trying to set non-existant point's solidity");
-
-            Points[pos].Solidity = solid;
         }
 
         public IEnumerable<Vec3Int> AllGridNeighbours(Vec3Int pnt)
@@ -264,14 +273,16 @@ namespace Growth.Voronoi
             Delaunay.InitialiseWithVerts(new Vec3[] { a, b, c, d });
         }
 
-        private void GeneratePolyhedron(Vec3Int cell)
+        private void GeneratePolyhedron(ProgressivePoint pnt)
         {
+            var cell = pnt.Cell;
+
             // this one should exist...
             ProgressivePoint point = Points[cell];
 
             if (point.Polyhedron == null)
             {
-                point.PolyhedronRW = new VPolyhedron(point.Position);
+                point.PolyhedronRW = new VPolyhedron(point.Position, pnt.MeshType);
             }
 
             foreach (ProgressivePoint neighbour in PointNeighbours(point))
@@ -434,19 +445,17 @@ namespace Growth.Voronoi
                 .Select(vert => Points[Vert2Cell(vert)]);
         }
 
-        private void AddPointInner(Vec3Int cell, Vec3 pnt, IProgressiveVoronoi.Solidity solid)
+        private ProgressivePoint AddPointInner(Vec3Int cell, Vec3 pnt,
+            IProgressiveVoronoi.Solidity solid, IVPolyhedron.MeshType mesh_type,
+            Material material)
         {
             MyAssert.IsTrue(solid != IProgressiveVoronoi.Solidity.Unknown, "Trying to set point with unknown solitity");
 
-            if (Points.ContainsKey(cell))
+            ProgressivePoint pp;
+
+            if (!Points.TryGetValue(cell, out pp))
             {
-                SetSolidity(cell, solid);
-            }
-            else
-            {
-                var pp = new ProgressivePoint(pnt, cell, this);
-                pp.Exists = true;
-                pp.Solidity = solid;
+                pp = new ProgressivePoint(pnt, cell, this, mesh_type, material);
 
                 Points[cell] = pp;
 
@@ -454,6 +463,14 @@ namespace Growth.Voronoi
 
                 Delaunay.AddVert(pnt);
             }
+
+            pp.Exists = true;
+            pp.Solidity = solid;
+            pp.Material = material;
+            pp.MeshType = mesh_type;
+            pp.Material = material;
+
+            return pp;
         }
 
         private Vec3 PerturbPoint(Vec3Int cell)
