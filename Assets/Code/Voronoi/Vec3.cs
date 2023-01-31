@@ -6,7 +6,7 @@ namespace Growth.Voronoi
 {
     // purpose here is to have an immutable 3d vector type, Unity's is mutable...
     [DebuggerDisplay("({X}, {Y}, {Z})")]
-    public class Vec3
+    public class Vec3 : IEquatable<Vec3>
     {
         public Vec3(float x, float y, float z)
         {
@@ -125,6 +125,18 @@ namespace Growth.Voronoi
         public float Length2()
         {
             return Dot(this);
+        }
+
+        public bool Equals(Vec3 other)
+        {
+            return X == other.X
+                && Y == other.Y
+                && Z == other.Z;
+        }
+
+        public override int GetHashCode()
+        {
+            return X.GetHashCode() + Y.GetHashCode() * 3 + Z.GetHashCode() * 7;
         }
     }
 }
