@@ -1,4 +1,6 @@
-﻿using Growth.Util;
+﻿#define PROFILE_ON
+
+using Growth.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +12,7 @@ namespace Growth.Voronoi
     {
         public Delaunay(float tolerance)
         {
-            TetsRW = new List<DTetrahedron>();
+            TetsRW = new HashSet<DTetrahedron>();
             Tolerance = tolerance;
             Tags = new Dictionary<Vec3, List<String>>();
         }
@@ -24,13 +26,13 @@ namespace Growth.Voronoi
             Tags = old.Tags;
         }
 
-        List<DTetrahedron> TetsRW { get; }
+        HashSet<DTetrahedron> TetsRW { get; }
 
         Dictionary<Vec3, List<String>> Tags;
 
         #region IDelaunay
-        public IReadOnlyList<DTetrahedron> Tets { get { return TetsRW; } }
-        public IEnumerable<Vec3> Verts { get { return Tets.SelectMany(x => x.Verts).Distinct(); } }
+        public IEnumerable<DTetrahedron> Tets => TetsRW;
+        public IEnumerable<Vec3> Verts => Tets.SelectMany(x => x.Verts).Distinct();
         public IDelaunay Clone()
         {
             return new Delaunay(this);
@@ -81,22 +83,32 @@ namespace Growth.Voronoi
 
         public void AddVert(Vec3 v)
         {
+            PoorMansProfiler.Start("Delaunay.AddVert");
+            PoorMansProfiler.Start("Delaunay.Find Tets");
             // SPATIAL SEARCH
             List<DTetrahedron> bad_tets = Tets.Where(tet => tet.Sphere.Contains(v, Tolerance)).ToList();
+            PoorMansProfiler.End("Delaunay.Find Tets");
 
+            PoorMansProfiler.Start("Delaunay.Build Triangular Poly");
             TriangularPolyhedron pt = new TriangularPolyhedron(bad_tets);
+            PoorMansProfiler.End("Delaunay.Build Triangular Poly");
 
+            PoorMansProfiler.Start("Delaunay.Remove Tets");
             foreach (var tet in bad_tets)
             {
                 TetsRW.Remove(tet);
             }
+            PoorMansProfiler.End("Delaunay.Remove Tets");
 
+            PoorMansProfiler.Start("Delaunay.Add Tets");
             foreach (var tri in pt.TriFaces)
             {
                 var tet = new DTetrahedron(v, tri.V1, tri.V2, tri.V3);
 
                 AddTet(tet);
             }
+            PoorMansProfiler.End("Delaunay.Add Tets");
+            PoorMansProfiler.End("Delaunay.AddVert");
         }
 
         public void InitialiseWithVerts(Vec3[] verts)
@@ -163,7 +175,7 @@ namespace Growth.Voronoi
             // remove the encapsulating verts we started with, and any associated tets
             var encapsulating_vert_tets = Tets.Where(x => x.UsesVert(c0) || x.UsesVert(c1) || x.UsesVert(c2) || x.UsesVert(c3)).ToList();
 
-            TetsRW.RemoveAll(tet => encapsulating_vert_tets.Contains(tet));
+            TetsRW.RemoveWhere(tet => encapsulating_vert_tets.Contains(tet));
 
             MyAssert.IsTrue(!Verts.Contains(c0), "Initial vert not found");
             MyAssert.IsTrue(!Verts.Contains(c1), "Initial vert not found");
