@@ -1,7 +1,11 @@
-﻿using System;
+﻿#define PROFILE_ON
+
+using Growth.Util;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using UnityEngine;
 
 namespace Growth.Voronoi
 {
@@ -14,9 +18,9 @@ namespace Growth.Voronoi
         {
             public TriIndex(int i1, int i2, int i3)
             {
-                I1 = i1;
-                I2 = i2;
-                I3 = i3;
+                I1 = Mathf.Min(i1, i2, i3);
+                I3 = Mathf.Max(i1, i2, i3);
+                I2 = i1 + i2 + i3 - I1 - I3;
             }
 
             public readonly int I1;
@@ -35,9 +39,14 @@ namespace Growth.Voronoi
 
             public bool Equals(TriIndex other)
             {
-                return Indices.Contains(other.I1)
-                    && Indices.Contains(other.I2)
-                    && Indices.Contains(other.I3);
+                return I1 == other.I1
+                    && I2 == other.I2
+                    && I3 == other.I3;
+            }
+
+            public override int GetHashCode()
+            {
+                return I1.GetHashCode() + I2.GetHashCode() * 3 + I3.GetHashCode() * 7;
             }
         }
 
@@ -63,28 +72,38 @@ namespace Growth.Voronoi
 
         public void AddTetrahedron(DTetrahedron tet)
         {
+            PoorMansProfiler.Start("TriangularPolyhedron.AddTetrahedron");
+
             foreach (var f in tet.Triangles)
             {
-                int[] vert_idxs = f.Verts.Select(vert_idxs => AddFindVert(vert_idxs)).ToArray();
+                PoorMansProfiler.Start("TriangularPolyhedron.AddFindVert");
+                int[] vert_idxs = f.Verts.Select(v => AddFindVert(v)).ToArray();
+                PoorMansProfiler.End("TriangularPolyhedron.AddFindVert");
 
                 TriIndex tri = new TriIndex(vert_idxs[0], vert_idxs[1], vert_idxs[2]);
 
+                PoorMansProfiler.Start("TriangularPolyhedron.Tri Search");
                 // some significant CPU in this search, could store indexed by hash?
                 // or indexed by one very then brute-force the others?
                 bool find = Triangles.Contains(tri);
+                PoorMansProfiler.End("TriangularPolyhedron.Tri Search");
 
                 // we build ourselves from tets, when a tet we already saw contains the same face
                 // as one being added, it means that is becoming an internal face between two tets
                 // and we do not want it...
                 if (find)
                 {
+                    PoorMansProfiler.Start("TriangularPolyhedron.Tri Remove");
                     Triangles.Remove(tri);
+                    PoorMansProfiler.End("TriangularPolyhedron.Tri Remove");
                 }
                 else
                 {
                     Triangles.Add(tri);
                 }
             }
+
+            PoorMansProfiler.End("TriangularPolyhedron.AddTetrahedron");
         }
 
         public int AddFindVert(Vec3 v)
