@@ -461,6 +461,7 @@ namespace Growth.Voronoi
             IProgressiveVoronoi.Solidity solid, IVPolyhedron.MeshType mesh_type,
             Material material)
         {
+            PoorMansProfiler.Start("AddPointInner");
             MyAssert.IsTrue(solid != IProgressiveVoronoi.Solidity.Unknown, "Trying to set point with unknown solitity");
 
             ProgressivePoint pp;
@@ -481,6 +482,8 @@ namespace Growth.Voronoi
             pp.Material = material;
             pp.MeshType = mesh_type;
             pp.Material = material;
+
+            PoorMansProfiler.End("AddPointInner");
 
             return pp;
         }

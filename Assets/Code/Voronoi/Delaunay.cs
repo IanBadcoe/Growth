@@ -26,6 +26,8 @@ namespace Growth.Voronoi
             Tags = old.Tags;
         }
 
+        // HashSet keys off Reference identity, not any sort of geometry,
+        // because all we need to do is find items we already have and remove them...
         HashSet<DTetrahedron> TetsRW { get; }
 
         Dictionary<Vec3, List<String>> Tags;
