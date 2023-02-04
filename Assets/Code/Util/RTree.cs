@@ -91,6 +91,35 @@ namespace Growth.Util
             // nothing, initialisers give us an empty tree
         }
 
+        public IEnumerable<T> Search(VBounds b)
+        {
+            foreach (T t in Search(Root, b))
+            {
+                yield return t;
+            }
+        }
+
+        private IEnumerable<T> Search(Node node, VBounds b)
+        {
+            if (node.GetBound().Overlaps(b))
+            {
+                if (node.IsLeaf)
+                {
+                    yield return node.Item;
+                }
+                else
+                {
+                    foreach(var child in node.Children)
+                    {
+                        foreach(T t in Search(child, b))
+                        {
+                            yield return t;
+                        }
+                    }
+                }
+            }
+        }
+
         public void Insert(T item)
         {
             if (Root.IsEmpty)
@@ -123,7 +152,7 @@ namespace Growth.Util
         {
             Node insert_here_node;
 
-            if (!node.Children[0].IsLeaf)
+            if (node.Children[0].IsLeaf)
             {
                 // we reached the penultimate level, insert into this node
                 insert_here_node = insert_leaf_node;
@@ -257,37 +286,37 @@ namespace Growth.Util
             {
                 VBounds b = node.GetBound();
 
-                if (max_x > b.Min.X)
+                if (max_x < b.Min.X)
                 {
                     max_x = b.Min.X;
                     max_x_node = node;
                 }
 
-                if (max_y > b.Min.Y)
+                if (max_y < b.Min.Y)
                 {
                     max_y = b.Min.Y;
                     max_y_node = node;
                 }
 
-                if (max_z > b.Min.Z)
+                if (max_z < b.Min.Z)
                 {
                     max_z = b.Min.Z;
                     max_z_node = node;
                 }
 
-                if (min_x < b.Max.X)
+                if (min_x > b.Max.X)
                 {
                     min_x = b.Max.X;
                     min_x_node = node;
                 }
 
-                if (min_y < b.Max.Y)
+                if (min_y > b.Max.Y)
                 {
                     min_y = b.Max.Y;
                     min_y_node = node;
                 }
 
-                if (min_z < b.Max.Z)
+                if (min_z > b.Max.Z)
                 {
                     min_z = b.Max.Z;
                     min_z_node = node;
@@ -296,16 +325,25 @@ namespace Growth.Util
 
             var ret = new Tuple<Node, Node>(min_x_node, max_x_node);
             var range = max_x - min_x;
+            float range_y = max_y - min_y;
+            float range_z = max_z - min_z;
 
-            if (max_y - min_y > range)
+            if (range_y > range)
             {
                 ret = new Tuple<Node, Node>(min_y_node, max_y_node);
-                range = max_y - min_y;
+                range = range_y;
             }
 
-            if (max_z - min_z > range)
+            if (range_z > range)
             {
                 ret = new Tuple<Node, Node>(min_z_node, max_z_node);
+            }
+
+            // if all 8 items were identical, this happens
+            if (ret.Item1 == ret.Item2)
+            {
+                // and it really does not matter what we return...
+                ret = new Tuple<Node, Node>(nodes[0], nodes[1]);
             }
 
             return ret;

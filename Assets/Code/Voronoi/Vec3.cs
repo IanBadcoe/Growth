@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Growth.Util;
+using System;
 using System.Diagnostics;
 using UnityEngine;
 
@@ -6,7 +7,7 @@ namespace Growth.Voronoi
 {
     // purpose here is to have an immutable 3d vector type, Unity's is mutable...
     [DebuggerDisplay("({X}, {Y}, {Z})")]
-    public class Vec3 : IEquatable<Vec3>
+    public class Vec3 : IEquatable<Vec3>, IBounded
     {
         public Vec3(float x, float y, float z)
         {
@@ -148,5 +149,12 @@ namespace Growth.Voronoi
         {
             return X.GetHashCode() + Y.GetHashCode() * 3 + Z.GetHashCode() * 7;
         }
+
+        #region IBounded
+        public VBounds GetBounds()
+        {
+            return new VBounds(this, this);
+        }
+        #endregion
     }
 }

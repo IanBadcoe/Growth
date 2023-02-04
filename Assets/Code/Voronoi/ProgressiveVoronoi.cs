@@ -85,7 +85,7 @@ namespace Growth.Voronoi
         readonly Delaunay Delaunay;
         readonly Dictionary<Vec3Int, ProgressivePoint> Points;
         readonly ClRand Random;
-        readonly List<Vec3> PolyVerts;     // these are the polygon/polyhedron verts
+        readonly RTree<Vec3> PolyVerts;    // these are the polygon/polyhedron verts
                                            // just kept here so we can merge those which are too close together
                                            // to help eliminate degenerate polygons
         readonly float Perturbation;
@@ -96,7 +96,7 @@ namespace Growth.Voronoi
             Delaunay = new Delaunay(tolerance);
             Points = new Dictionary<Vec3Int, ProgressivePoint>();
             Random = random;
-            PolyVerts = new List<Vec3>();
+            PolyVerts = new RTree<Vec3>();
             Perturbation = perturbation;
 
             InitialiseDelaunay(size);
@@ -384,34 +384,32 @@ namespace Growth.Voronoi
 
             PoorMansProfiler.Start("MergeVerts");
 
-            List<int> vert_idxs = new List<int>();
-
-            int first_idx = AddFindPolyVert(face_verts[0]);
-            int prev_idx = first_idx;
+            Vec3 first_vec = AddFindPolyVert(face_verts[0]);
+            Vec3 prev_vec = first_vec;
 
             List<Vec3> merged_verts = new List<Vec3>(face_verts.Count);
-            merged_verts.Add(PolyVerts[first_idx]);
+            merged_verts.Add(first_vec);
 
             // first: AddFind all verts into a set stored on this Voronoi
             for (int i = 1; i < face_verts.Count - 1; i++)
             {
-                int here_idx = AddFindPolyVert(face_verts[i]);
+                Vec3 here_vec = AddFindPolyVert(face_verts[i]);
 
-                if (here_idx != prev_idx)
+                if (here_vec != prev_vec)
                 {
-                    merged_verts.Add(PolyVerts[here_idx]);
+                    merged_verts.Add(here_vec);
                 }
 
-                prev_idx = here_idx;
+                prev_vec = here_vec;
             }
 
-            int last_idx = AddFindPolyVert(face_verts[face_verts.Count - 1]);
+            Vec3 last_vec = AddFindPolyVert(face_verts[face_verts.Count - 1]);
 
             // because we unconditionally added the first vert
             // the last must be different from the previous and the first
-            if (last_idx != first_idx && last_idx != prev_idx)
+            if (last_vec != first_vec && last_vec != prev_vec)
             {
-                merged_verts.Add(PolyVerts[last_idx]);
+                merged_verts.Add(last_vec);
             }
 
             PoorMansProfiler.End("MergeVerts");
@@ -447,21 +445,21 @@ namespace Growth.Voronoi
             return ret;
         }
 
-        private int AddFindPolyVert(Vec3 v)
+        private Vec3 AddFindPolyVert(Vec3 v)
         {
             // take the first existing vert, if any, within tolerance of the new vert
-            for(int i = 0; i < PolyVerts.Count; i++)
+            var tol_vec = new Vec3(Delaunay.Tolerance, Delaunay.Tolerance, Delaunay.Tolerance);
+            var tol_bounds = new VBounds(v - tol_vec, v + tol_vec);
+            var ret = PolyVerts.Search(tol_bounds).FirstOrDefault();
+
+            if (ret != null)
             {
-                Vec3 v_here = PolyVerts[i];
-                if ((v_here - v).Length2() < Delaunay.Tolerance * Delaunay.Tolerance)
-                {
-                    return i;
-                }
+                return ret;
             }
 
-            PolyVerts.Add(v);
+            PolyVerts.Insert(v);
 
-            return PolyVerts.Count - 1;
+            return v;
         }
 
         private IEnumerable<ProgressivePoint> PointNeighbours(IProgressivePoint point)

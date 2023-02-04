@@ -65,9 +65,34 @@ namespace Growth.Voronoi
 
         public float Volume => Size.X * Size.Y * Size.Z;
 
-        internal VBounds UnionedWith(VBounds other)
+        public VBounds UnionedWith(VBounds other)
         {
+            if (empty)
+            {
+                return other;
+            }
+            
+            if (other.empty)
+            {
+                return this;
+            }
+
             return new VBounds(Min.Min(other.Min), Max.Max(other.Max));
+        }
+
+        public bool Overlaps(VBounds b)
+        {
+            return !ClearOf(b);
+        }
+
+        public bool ClearOf(VBounds b)
+        {
+            return Min.X > b.Max.X
+                || Min.Y > b.Max.Y
+                || Min.Z > b.Max.Z
+                || b.Min.X > Max.X
+                || b.Min.Y > Max.Y
+                || b.Min.Z > Max.Z;
         }
     }
 }
