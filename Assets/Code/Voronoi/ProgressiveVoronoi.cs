@@ -1,4 +1,4 @@
-﻿#define PROFILE_ON
+﻿//#define PROFILE_ON
 
 using Growth.Util;
 using System;
@@ -299,13 +299,17 @@ namespace Growth.Voronoi
 
             foreach (ProgressivePoint neighbour in PointNeighbours(point))
             {
+                //PoorMansProfiler.Start("FaceWithNeighbour");
                 // our neighbour may already have the relevant face...
                 // (if it is non-solid)
                 Face face = neighbour.FaceWithNeighbour(point);
+                //PoorMansProfiler.End("FaceWithNeighbour");
 
                 if (face == null)
                 {
+                    //PoorMansProfiler.Start("TryCreateFace");
                     face = TryCreateFace(point.Position, neighbour.Position);
+                    //PoorMansProfiler.End("TryCreateFace");
 
                     if (face != null)
                     {
@@ -322,7 +326,9 @@ namespace Growth.Voronoi
                 {
                     point.FacesMap[neighbour] = face;
 
+                    //PoorMansProfiler.Start("AddFace");
                     point.PolyhedronRW.AddFace(face);
+                    //PoorMansProfiler.End("AddFace");
 
                     // currently our use-case is building a poly for one (new) point at a time,
                     // so no need to add the face to any poly on the neighbour
@@ -334,16 +340,22 @@ namespace Growth.Voronoi
         // can return null for a degenerate face
         private Face TryCreateFace(Vec3 our_point, Vec3 other_point)
         {
+            PoorMansProfiler.Start("FindTets");
             // find all the tets that use this edge
             var edge_tets = Delaunay.Tets.Where(tet => tet.UsesVert(our_point) && tet.UsesVert(other_point)).ToList();
+            PoorMansProfiler.End("FindTets");
 
             var face_verts = new List<Vec3>();
 
             var current_tet = edge_tets[0];
 
+            PoorMansProfiler.Start("FindFromVert");
             // get any one other vert of this tet, this indicates the direction we are
             // "coming from"
             var v_from = current_tet.Verts.Where(v => v != our_point && v != other_point).First();
+            PoorMansProfiler.End("FindFromVert");
+
+            PoorMansProfiler.Start("Loop");
 
             do
             {
@@ -364,63 +376,45 @@ namespace Growth.Voronoi
             }
             while (current_tet != null);
 
+            PoorMansProfiler.End("Loop");
+
             // eliminate any face_verts which are identical (or within a tolerance) of the previous
             // but (i) with randomized seed data we do not expect that to happen much and (ii) all ignoring this does is add degenerate
             // polys/edges to the output, which I do not think will be a problem at the moment
 
+            PoorMansProfiler.Start("MergeVerts");
+
+            List<int> vert_idxs = new List<int>();
+
+            int first_idx = AddFindPolyVert(face_verts[0]);
+            int prev_idx = first_idx;
+
+            List<Vec3> merged_verts = new List<Vec3>(face_verts.Count);
+            merged_verts.Add(PolyVerts[first_idx]);
+
             // first: AddFind all verts into a set stored on this Voronoi
-            for (int i = 0; i < face_verts.Count; i++)
+            for (int i = 1; i < face_verts.Count - 1; i++)
             {
-                var v_here = face_verts[i];
+                int here_idx = AddFindPolyVert(face_verts[i]);
 
-                var closest_data = PolyVerts.Aggregate(new Tuple<float, Vec3>(float.MaxValue, v_here), (acc, v) =>
+                if (here_idx != prev_idx)
                 {
-                    var v_d2 = (v_here - v).Length2();
-
-                    // if this is closer than the current best, and also closer than our tolerance
-                    // swap it into the accumulator
-                    if (v_d2 < acc.Item1
-                        && v_d2 < Delaunay.Tolerance * Delaunay.Tolerance)
-                    {
-                        return new Tuple<float, Vec3>(v_d2, v);
-                    }
-
-                    return acc;
-                });
-
-                // if we already had a point close to this one, swap that in
-                // otherwise add the new point into the set
-                //
-                // use distance comparison here, because if we get a precise hit, the vec3 reference/value compare
-                // will match, but we do not need to insert into PolyVerts
-                if (closest_data.Item1 != float.MaxValue)
-                {
-                    face_verts[i] = closest_data.Item2;
+                    merged_verts.Add(PolyVerts[here_idx]);
                 }
-                else
-                {
-                    PolyVerts.Add(v_here);
-                }
+
+                prev_idx = here_idx;
             }
 
-            // now eliminate any duplicates in the vert list...
+            int last_idx = AddFindPolyVert(face_verts[face_verts.Count - 1]);
 
-            var prev = face_verts.Last();
-
-            for(int i = 0; i < face_verts.Count;)
+            // because we unconditionally added the first vert
+            // the last must be different from the previous and the first
+            if (last_idx != first_idx && last_idx != prev_idx)
             {
-                Vec3 v_here = face_verts[i];
-
-                if (prev == v_here)
-                {
-                    face_verts.RemoveAt(i);
-                }
-                else
-                {
-                    i++;
-                    prev = v_here;
-                }
+                merged_verts.Add(PolyVerts[last_idx]);
             }
+
+            PoorMansProfiler.End("MergeVerts");
 
             // now, input points (Delaunay.Verts) which are neighbours become such by virtue of still having
             // a common face after this process of eliminating tiny edges/degenerate polys,
@@ -432,7 +426,7 @@ namespace Growth.Voronoi
             //
             // we may get tiny cracks between polys as a result, but the polys themselves should still be closed...
 
-            if (face_verts.Count < 3)
+            if (merged_verts.Count < 3)
             {
                 return null;
             }
@@ -444,7 +438,30 @@ namespace Growth.Voronoi
             // and I think all that happens with those is we do not know which was round to draw them, 
             // but they are all but invisible anyway...
 
-            return new Face(face_verts, (other_point - our_point).Normalised());
+            PoorMansProfiler.Start("Face ctor");
+
+            var ret = new Face(merged_verts, (other_point - our_point).Normalised());
+
+            PoorMansProfiler.End("Face ctor");
+
+            return ret;
+        }
+
+        private int AddFindPolyVert(Vec3 v)
+        {
+            // take the first existing vert, if any, within tolerance of the new vert
+            for(int i = 0; i < PolyVerts.Count; i++)
+            {
+                Vec3 v_here = PolyVerts[i];
+                if ((v_here - v).Length2() < Delaunay.Tolerance * Delaunay.Tolerance)
+                {
+                    return i;
+                }
+            }
+
+            PolyVerts.Add(v);
+
+            return PolyVerts.Count - 1;
         }
 
         private IEnumerable<ProgressivePoint> PointNeighbours(IProgressivePoint point)

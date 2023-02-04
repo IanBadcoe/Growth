@@ -23,3 +23,94 @@ Mesh time 0.07516289
 
 
 Total time 18.78601
+
+---
+
+Breakdown (different run):
+
+Adding Points	->	7.867575
+Generate Polyhedron	->	11.08169
+AddPoint	->	18.95532
+Outer	->	19.11821
+
+---
+
+Again with more detailed breakdown:
+
+Row 0 time 0.4422159
+Row 1 time 0.5055494
+Row 2 time 0.688282
+Row 3 time 0.6548424
+Row 4 time 0.7507133
+Row 5 time 0.7740297
+Row 6 time 1.018951
+Row 7 time 1.163097
+Row 8 time 1.090811
+Row 9 time 1.301802
+Row 10 time 1.379597
+Row 11 time 1.452103
+Row 12 time 1.77984
+Row 13 time 1.827471
+Row 14 time 1.734657
+Row 15 time 2.054604
+
+Voronoi time 18.61877
+
+Mesh time 0.08325386
+
+
+Total time 18.70203
+
+TriangularPolyhedron.AddFindVert	->	0.5601854
+TriangularPolyhedron.Tri Search	->	0.1775618
+TriangularPolyhedron.AddTetrahedron	->	1.47321
+TriangularPolyhedron.Tri Remove	->	0.07348347
+Adding Points	->	6.113088
+Generate Polyhedron	->	12.47601
+AddPoint	->	18.59339
+Outer	->	18.70309
+
+---
+
+Store Delaunay tets in a HashSet
+
+Row 0 time 0.4917674
+Row 1 time 0.5804229
+Row 2 time 0.5925541
+Row 3 time 0.6553421
+Row 4 time 0.7292547
+Row 5 time 0.738656
+Row 6 time 0.9680119
+Row 7 time 1.033068
+Row 8 time 1.122786
+Row 9 time 1.321561
+Row 10 time 1.386699
+Row 11 time 1.38582
+Row 12 time 1.426945
+Row 13 time 1.654587
+Row 14 time 1.630228
+Row 15 time 1.928232
+
+Voronoi time 17.64616
+
+Mesh time 0.08498192
+
+
+Total time 17.73114
+
+Delaunay.Find Tets	->	1.043066
+TriangularPolyhedron.AddFindVert	->	0.5785484
+TriangularPolyhedron.Tri Search	->	0.1799617
+TriangularPolyhedron.AddTetrahedron	->	1.55471
+Delaunay.Build Triangular Poly	->	1.613718
+Delaunay.Remove Tets	->	0.01021576
+Delaunay.Add Tets	->	2.083109
+Delaunay.AddVert	->	4.764277
+TriangularPolyhedron.Tri Remove	->	0.06673956
+Adding Points	->	4.790021
+Generate Polyhedron	->	12.81687
+AddPoint	->	17.61012
+Outer	->	17.73221
+
+---
+
