@@ -94,6 +94,16 @@ namespace Growth.Voronoi
             return new Vec3Int(Mathf.FloorToInt(X), Mathf.FloorToInt(Y), Mathf.FloorToInt(Z));
         }
 
+        public Vec3 Max(Vec3 other)
+        {
+            return new Vec3(Mathf.Max(X, other.X), Mathf.Max(Y, other.Y), Mathf.Max(Z, other.Z));
+        }
+
+        internal Vec3 Min(Vec3 other)
+        {
+            return new Vec3(Mathf.Min(X, other.X), Mathf.Min(Y, other.Y), Mathf.Min(Z, other.Z));
+        }
+
         public Vector3 ToVector3()
         {
             return new Vector3(X, Y, Z);

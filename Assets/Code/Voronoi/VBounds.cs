@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Growth.Voronoi
@@ -8,6 +9,17 @@ namespace Growth.Voronoi
     {
         Bounds Bounds;
         bool empty = true;
+
+        public VBounds()
+        {
+
+        }
+
+        public VBounds(Vec3 min, Vec3 max)
+        {
+            Bounds = new Bounds(((min + max) / 2).ToVector3(), (max - min).ToVector3());
+            empty = false;
+        }
 
         public void Encapsulate(Vec3 v)
         {
@@ -49,6 +61,13 @@ namespace Growth.Voronoi
                 yield return new Vec3(Bounds.max.x, Bounds.max.y, Bounds.max.z);
                 yield return new Vec3(Bounds.max.x, Bounds.max.y, Bounds.min.z);
             }
+        }
+
+        public float Volume => Size.X * Size.Y * Size.Z;
+
+        internal VBounds UnionedWith(VBounds other)
+        {
+            return new VBounds(Min.Min(other.Min), Max.Max(other.Max));
         }
     }
 }
