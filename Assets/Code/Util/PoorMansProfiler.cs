@@ -12,14 +12,17 @@ namespace Growth.Util
 {
     static class PoorMansProfiler
     {
-        static Dictionary<String, float> CumulativeTimings = new Dictionary<string, float>();
+        static Dictionary<String, float> SliceTimings = new Dictionary<string, float>();
+        static Dictionary<String, float> StackTimings = new Dictionary<string, float>();
 
         static List<Tuple<String, float>> Stack = new List<Tuple<string, float>>();
+
 
         [System.Diagnostics.Conditional("PROFILE_ON")]
         public static void Reset()
         {
-            CumulativeTimings = new Dictionary<string, float>();
+            SliceTimings = new Dictionary<string, float>();
+            StackTimings = new Dictionary<string, float>();
             Stack = new List<Tuple<string, float>>();
         }
 
@@ -39,30 +42,53 @@ namespace Growth.Util
             MyAssert.IsTrue(name == Stack.Last().Item1, "Trying to pop item which is not the top of the stack");
 
             var entry = Stack.Last();
-            Stack.RemoveAt(Stack.Count - 1);
-
             var time = now - entry.Item2;
 
             Accumulate(name, time);
+
+            Stack.RemoveAt(Stack.Count - 1);
         }
 
         private static void Accumulate(string name, float time)
         {
-            if (!CumulativeTimings.ContainsKey(name))
+            if (!SliceTimings.ContainsKey(name))
             {
-                CumulativeTimings[name] = 0;
+                SliceTimings[name] = 0;
             }
 
-            CumulativeTimings[name] += time;
+            SliceTimings[name] += time;
+
+            string stack_name = BuildStackName();
+
+            if (!StackTimings.ContainsKey(stack_name))
+            {
+                StackTimings[stack_name] = 0;
+            }
+
+            StackTimings[stack_name] += time;
         }
 
         [System.Diagnostics.Conditional("PROFILE_ON")]
         public static void Dump()
         {
-            foreach(var pair in CumulativeTimings)
+            System.Diagnostics.Debug.Write("By section name\n");
+
+            foreach (var pair in SliceTimings.OrderBy(p => p.Key))
             {
                 System.Diagnostics.Debug.Write($"{pair.Key}\t->\t{pair.Value}");
             }
+
+            System.Diagnostics.Debug.Write("By stack path\n");
+
+            foreach (var pair in StackTimings.OrderBy(p => p.Key))
+            {
+                System.Diagnostics.Debug.Write($"{pair.Key}\t->\t{pair.Value}");
+            }
+        }
+
+        static string BuildStackName()
+        {
+            return Stack.Aggregate("", (str, s2) => str + "  |  " + s2.Item1);
         }
     }
 
