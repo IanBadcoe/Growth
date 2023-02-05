@@ -55,6 +55,34 @@ namespace Growth.Util
                 return Bound;
             }
 
+            public bool IsValid => Item == null || Children == null;
+
+            public bool IsEmpty => Item == null && Children == null;
+
+            public bool IsLeaf => Item != null;
+
+            public void SetParent(Node node)
+            {
+                Parent = node;
+
+                if (Parent != null)
+                {
+                    Parent.Level = Level + 1;
+                }
+            }
+
+            internal void SetChildren(List<Node> nodes)
+            {
+                Children = nodes;
+
+                foreach (var child in Children)
+                {
+                    child.SetParent(this);
+                }
+
+                IsDirty = true;
+            }
+
             private void RecalculateBound()
             {
                 if (Item != null)
@@ -71,30 +99,6 @@ namespace Growth.Util
                 }
 
                 IsDirty = false;
-            }
-
-            public bool IsValid => Item == null || Children == null;
-
-            public bool IsEmpty => Item == null && Children == null;
-
-            public bool IsLeaf => Item != null;
-
-            internal void SetChildren(List<Node> nodes)
-            {
-                Children = nodes;
-
-                foreach (var child in Children)
-                {
-                    child.SetParent(this);
-                }
-
-                IsDirty = true;
-            }
-
-            public void SetParent(Node node)
-            {
-                Parent = node;
-                Parent.Level = Level + 1;
             }
         }
 
@@ -127,6 +131,118 @@ namespace Growth.Util
             }
         }
 
+        public IEnumerable<T> Search(VBounds b)
+        {
+            foreach (Node n in Search(Root, b))
+            {
+                yield return n.Item;
+            }
+        }
+
+        public void Insert(T item)
+        {
+            if (Root.IsEmpty)
+            {
+                Root.Item = item;
+                Root.IsDirty = true;
+                return;
+            }
+
+            var item_node = new Node(item);
+
+            if (Root.IsLeaf)
+            {
+                Root = new Node (new List<Node>{ item_node, Root });
+            }
+            else
+            {
+                // we are inserting a new leaf (Level == 0) so it goes in level 1
+                var new_node = InsertNode(Root, item_node, 1);
+
+                if (new_node != null)
+                {
+                    Root = new Node(new List<Node> { Root, new_node });
+                }
+            }
+        }
+
+        public void Remove(T t)
+        {
+            Node t_n = null;
+            foreach(Node n in Search(Root, t.GetBounds()))
+            {
+                if (ReferenceEquals(n.Item, t))
+                {
+                    t_n = n;
+                    break;
+                }
+            }
+
+            // uniquely a single item tree does not remove the Root node, it just sets it empty...
+            if (t_n == Root)
+            {
+                Root.Item = null;
+                Root.IsDirty = true;
+            }
+            else
+            {
+                RemoveFrom(t_n.Parent, t_n);
+            }
+        }
+
+        public bool IsValid()
+        {
+            foreach(Node n in EnumerateNodes(true, true, true))
+            {
+                if (!n.IsValid)
+                {
+                    return false;
+                }
+
+                if (Root == n && n.Parent != null)
+                {
+                    return false;
+                }
+
+                if (Root != n)
+                {
+                    if (n.Parent == null)
+                    {
+                        return false;
+                    }
+
+                    if (n.Level != n.Parent.Level - 1)
+                    {
+                        return false;
+                    }
+                }
+
+                if (n.Children != null)
+                {
+                    if (n.Children.Count > MaxChildren)
+                    {
+                        return false;
+                    }       
+                    
+                    // root node is allowed < MinChildren as that is how we accommodate small trees
+                    if (n != Root && n.Children.Count < MinChildren)
+                    {
+                        return false;
+                    }
+                }
+
+                if (n.IsLeaf)
+                {
+                    if (n.Level != 0)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+        
         private IEnumerable<Node> EnumerateNodes(bool include_empty, bool include_internal, bool include_leaves)
         {
             return EnumerateNodes(Root, include_empty, include_internal, include_leaves);
@@ -161,15 +277,7 @@ namespace Growth.Util
             }
         }
 
-        public IEnumerable<T> Search(VBounds b)
-        {
-            foreach (T t in Search(Root, b))
-            {
-                yield return t;
-            }
-        }
-
-        private IEnumerable<T> Search(Node node, VBounds b)
+        private IEnumerable<Node> Search(Node node, VBounds b)
         {
             if (node.IsEmpty)
                 yield break;
@@ -178,77 +286,51 @@ namespace Growth.Util
             {
                 if (node.IsLeaf)
                 {
-                    yield return node.Item;
+                    yield return node;
                 }
                 else
                 {
-                    foreach(var child in node.Children)
+                    foreach (var child in node.Children)
                     {
-                        foreach(T t in Search(child, b))
+                        foreach (Node n in Search(child, b))
                         {
-                            yield return t;
+                            yield return n;
                         }
                     }
                 }
             }
         }
 
-        public void Insert(T item)
-        {
-            if (Root.IsEmpty)
-            {
-                Root.Item = item;
-                Root.IsDirty = true;
-                return;
-            }
-
-            var item_node = new Node(item);
-
-            if (Root.IsLeaf)
-            {
-                Root = new Node (new List<Node>{ item_node, Root });
-            }
-            else
-            {
-                var new_node = InsertNode(Root, item_node);
-
-                if (new_node != null)
-                {
-                    Root = new Node(new List<Node> { Root, new_node });
-                }
-            }
-        }
-
-        private Node InsertNode(Node node, Node insert_leaf_node)
+        private Node InsertNode(Node search_node, Node insert_node, int level)
         {
             Node insert_here_node;
 
-            if (node.Children[0].IsLeaf)
+            if (search_node.Level == level)
             {
                 // we reached the penultimate level, insert into this node
-                insert_here_node = insert_leaf_node;
+                insert_here_node = insert_node;
             }
             else
             {
                 // recurse into children and get any (split) node to insert here back
-                var insert_node = ChooseNode(node.Children, insert_leaf_node);
+                var search_further_node = ChooseNode(search_node.Children, insert_node);
 
-                insert_here_node = InsertNode(insert_node, insert_leaf_node);
+                insert_here_node = InsertNode(search_further_node, insert_node, level);
             }
 
             if (insert_here_node == null)
                 return null;
 
-            if (node.Children.Count < MaxChildren)
+            if (search_node.Children.Count < MaxChildren)
             {
-                node.Children.Add(insert_here_node);
-                insert_here_node.SetParent(node);
-                node.IsDirty = true;
+                search_node.Children.Add(insert_here_node);
+                insert_here_node.SetParent(search_node);
+                search_node.IsDirty = true;
 
                 return null;
             }
 
-            return SplitNode(node, insert_here_node);
+            return SplitNode(search_node, insert_here_node);
         }
 
         private Node SplitNode(Node node, Node new_node)
@@ -465,57 +547,40 @@ namespace Growth.Util
             return chosen;
         }
 
-        public bool IsValid()
+        private void RemoveFrom(Node remove_from, Node node)
         {
-            foreach(Node n in EnumerateNodes(true, true, true))
+            MyAssert.IsTrue(remove_from != null, "Removing from what-now?");
+            MyAssert.IsTrue(remove_from.Children != null, "Removing from node with no Children list...");
+            MyAssert.IsTrue(remove_from.Children.Count > 0, "Removing from node with empty Children list...");
+            remove_from.Children.Remove(node);
+            remove_from.IsDirty = true;
+
+            if (remove_from == Root)
             {
-                if (!n.IsValid)
+                if (remove_from.Children.Count == 1)
                 {
-                    return false;
+                    // if the root is not required anymore, shorten the tree
+                    Root = remove_from.Children[0];
+                    Root.SetParent(null);
                 }
+            }
+            else if (remove_from.Children.Count < MinChildren)
+            {
+                RemoveFrom(remove_from.Parent, remove_from);
 
-                if (Root == n && n.Parent != null)
+                // reinsert the children of the removed node at the same level then came from...
+                foreach(Node child in remove_from.Children)
                 {
-                    return false;
-                }
+                    var new_node = InsertNode(Root, child, remove_from.Level);
 
-                if (Root != n)
-                {
-                    if (n.Parent == null)
+                    if (new_node != null)
                     {
-                        return false;
-                    }
-
-                    if (n.Level != n.Parent.Level - 1)
-                    {
-                        return false;
-                    }
-                }
-
-                if (n.Children != null)
-                {
-                    if (n.Children.Count > MaxChildren)
-                    {
-                        return false;
-                    }       
-                    
-                    // root node is allowed < MinChildren as that is how we accommodate small trees
-                    if (n != Root && n.Children.Count < MinChildren)
-                    {
-                        return false;
-                    }
-                }
-
-                if (n.IsLeaf)
-                {
-                    if (n.Level != 0)
-                    {
-                        return false;
+                        // can this happen? we are making the tree shorter, but I maybe we could end up filling one branch by more
+                        // and need to put back a level of root we just thought we could remove?
+                        Root = new Node(new List<Node> { Root, new_node });
                     }
                 }
             }
-
-            return true;
         }
     }
 }

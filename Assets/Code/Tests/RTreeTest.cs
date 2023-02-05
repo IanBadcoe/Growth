@@ -39,7 +39,7 @@ public class RTreeTest
     }
 
     [Test]
-    public void RTreeTestAddLots()
+    public void RTreeTestAddRemoveLots()
     {
         RTree<Vec3> tree = new RTree<Vec3>();
         ClRand rand = new ClRand(3);
@@ -48,6 +48,18 @@ public class RTreeTest
         {
             tree.Insert(rand.Vec3());
             Assert.IsTrue(tree.IsValid());
+        }
+
+        List<Vec3> all_nodes = tree.ToList();
+
+        while(all_nodes.Count > 0)
+        {
+            int idx = rand.IntRange(0, all_nodes.Count);
+            Vec3 v = all_nodes[idx];
+            all_nodes.RemoveAt(idx);
+            tree.Remove(v);
+            Assert.IsTrue(tree.IsValid());
+            Assert.AreEqual(all_nodes.Count, tree.Count());
         }
     }
 
