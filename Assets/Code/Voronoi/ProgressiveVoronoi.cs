@@ -1,4 +1,4 @@
-﻿//#define PROFILE_ON
+﻿#define PROFILE_ON
 
 using Growth.Util;
 using System;
@@ -10,7 +10,7 @@ namespace Growth.Voronoi
 {
     class ProgressivePoint : IProgressivePoint
     {
-        public ProgressivePoint(Vec3 pos,
+        public ProgressivePoint(Vec3 pos, 
             Vec3Int cell,
             ProgressiveVoronoi pv,
             IVPolyhedron.MeshType mesh_type,

@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using System.Linq;
+using Growth.Voronoi;
 
 namespace Growth.Util
 {
@@ -263,12 +264,13 @@ namespace Growth.Util
         }
 
 
-        public Vector2 Vec2(float low, float high)
+        public Vector2 Vector2(float low, float high)
         {
             return new Vector2(
                 Float() * (high - low) + low,
                 Float() * (high - low) + low);
         }
+
         public float FloatRange(float min, float max)
         {
             return Float() * (max - min) + min;
@@ -286,6 +288,12 @@ namespace Growth.Util
         public ClRand NewClRand()
         {
             return new ClRand(Next());
+        }
+
+        // a Vec3 between (0, 0, 0) and (1, 1, 1)
+        public Vec3 Vec3()
+        {
+            return new Vec3(Float(), Float(), Float());
         }
 
         public T EnumerationValue<T>()

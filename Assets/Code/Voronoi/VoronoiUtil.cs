@@ -36,11 +36,11 @@ namespace Growth.Voronoi
 
             foreach (var p in verts)
             {
-                b.Encapsulate(p);
+                b = b.Encapsulating(p);
             }
 
             // build an encapsulating cuboid bound_extension bigger than the minimum
-            b.Expand(probe_value * 2);
+            b = b.ExpandedBy(probe_value * 2);
 
             var bound_verts = new List<Vec3>();
 

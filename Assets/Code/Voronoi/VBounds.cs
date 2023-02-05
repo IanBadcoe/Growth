@@ -5,74 +5,87 @@ using UnityEngine;
 namespace Growth.Voronoi
 {
     // the only purpose here is to make a Vec3 version of the wrapped UnityEngine.Bounds
-    public class VBounds
+    public class VBounds : IEquatable<VBounds>
     {
-        Bounds Bounds;
-        bool empty = true;
+        public Vec3 Min { get; }
+        public Vec3 Max { get; }
 
         public VBounds()
         {
-
+            // we have exactly one representation of empty
+            Min = new Vec3(1, 0, 0);
+            Max = new Vec3(0, 0, 0);
         }
 
         public VBounds(Vec3 min, Vec3 max)
         {
-            Bounds = new Bounds(((min + max) / 2).ToVector3(), (max - min).ToVector3());
-            empty = false;
+            if (min.X > max.X || min.Y > max.Y || min.Z > max.Z)
+            {
+                // we have exactly one representation of empty
+                Min = new Vec3(1, 0, 0);
+                Max = new Vec3(0, 0, 0);
+            }
+
+            Min = min;
+            Max = max;
         }
 
-        public void Encapsulate(Vec3 v)
+        public VBounds Encapsulating(Vec3 v)
         {
-            if (empty)
+            var point_bound = new VBounds(v, v);
+            if (IsEmpty)
             {
-                Bounds = new Bounds(v.ToVector3(), Vector3.zero);
-                empty = false;
+                return point_bound;
             }
             else
             {
-                Bounds.Encapsulate(v.ToVector3());
+                return this.UnionedWith(point_bound);
             }
         }
 
-        public Vec3 Min => new Vec3(Bounds.min);
-        public Vec3 Max => new Vec3(Bounds.max);
-        public Vec3 Size => new Vec3(Bounds.size);
-        public Vec3 Centre => new Vec3(Bounds.center);
+        public Vec3 Size => Max - Min;
+        public Vec3 Centre => (Min + Max) / 2;
+
         public bool Contains(Vec3 pnt)
         {
-            return Bounds.Contains(pnt.ToVector3());
+            return pnt.X >= Min.X && pnt.X <= Max.X
+                && pnt.Y >= Min.Y && pnt.Y <= Max.Y
+                && pnt.Z >= Min.Z && pnt.Z <= Max.Z;
         }
 
-        public void Expand(float bound_extension)
+        public VBounds ExpandedBy(float bound_extension)
         {
-            // Unity put half on either end
-            Bounds.Expand(bound_extension * 2);
+            var exp_vec = new Vec3(bound_extension, bound_extension, bound_extension);
+
+            return new VBounds(Min - exp_vec, Max + exp_vec);
         }
 
         public IEnumerable<Vec3> Corners {
             get
             {
-                yield return new Vec3(Bounds.min.x, Bounds.min.y, Bounds.min.z);
-                yield return new Vec3(Bounds.min.x, Bounds.min.y, Bounds.max.z);
-                yield return new Vec3(Bounds.min.x, Bounds.max.y, Bounds.min.z);
-                yield return new Vec3(Bounds.min.x, Bounds.max.y, Bounds.max.z);
-                yield return new Vec3(Bounds.max.x, Bounds.min.y, Bounds.min.z);
-                yield return new Vec3(Bounds.max.x, Bounds.min.y, Bounds.max.z);
-                yield return new Vec3(Bounds.max.x, Bounds.max.y, Bounds.max.z);
-                yield return new Vec3(Bounds.max.x, Bounds.max.y, Bounds.min.z);
+                yield return new Vec3(Min.X, Min.Y, Min.Z);
+                yield return new Vec3(Min.X, Min.Y, Max.Z);
+                yield return new Vec3(Min.X, Max.Y, Min.Z);
+                yield return new Vec3(Min.X, Max.Y, Max.Z);
+                yield return new Vec3(Max.X, Min.Y, Min.Z);
+                yield return new Vec3(Max.X, Min.Y, Max.Z);
+                yield return new Vec3(Max.X, Max.Y, Max.Z);
+                yield return new Vec3(Max.X, Max.Y, Min.Z);
             }
         }
 
         public float Volume => Size.X * Size.Y * Size.Z;
 
+        public bool IsEmpty => Min.X == 1 && Max.X == 0;
+
         public VBounds UnionedWith(VBounds other)
         {
-            if (empty)
+            if (IsEmpty)
             {
                 return other;
             }
             
-            if (other.empty)
+            if (other.IsEmpty)
             {
                 return this;
             }
@@ -93,6 +106,16 @@ namespace Growth.Voronoi
                 || b.Min.X > Max.X
                 || b.Min.Y > Max.Y
                 || b.Min.Z > Max.Z;
+        }
+
+        public bool Equals(VBounds other)
+        {
+            return Min.Equals(other.Min) && Max.Equals(other.Max); 
+        }
+
+        public override int GetHashCode()
+        {
+            return Min.GetHashCode() + Max.GetHashCode() * 3;
         }
     }
 }

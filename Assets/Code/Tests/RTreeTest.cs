@@ -1,0 +1,63 @@
+using System.Collections;
+using System.Collections.Generic;
+using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.TestTools;
+using Growth.Util;
+using Growth.Voronoi;
+using System.Linq;
+
+public class RTreeTest
+{
+    // A Test behaves as an ordinary method
+    [Test]
+    public void RTreeTestAdd()
+    {
+        RTree<Vec3> tree = new RTree<Vec3>();
+
+        Assert.AreEqual(0, tree.Count());
+        Assert.IsTrue(tree.IsValid());
+        Assert.IsTrue(tree.Bounds.IsEmpty);
+
+        tree.Insert(new Vec3(0, 0, 0));
+
+        Assert.AreEqual(1, tree.Count());
+        Assert.IsTrue(tree.IsValid());
+        Assert.AreEqual(new VBounds(new Vec3(0, 0, 0), new Vec3(0, 0, 0)), tree.Bounds);
+
+        tree.Insert(new Vec3(1, 0, 0));
+
+        Assert.AreEqual(2, tree.Count());
+        Assert.IsTrue(tree.IsValid());
+        Assert.AreEqual(new VBounds(new Vec3(0, 0, 0), new Vec3(1, 0, 0)), tree.Bounds);
+
+        tree.Insert(new Vec3(0, 1, 0));
+
+        Assert.AreEqual(3, tree.Count());
+        Assert.IsTrue(tree.IsValid());
+        Assert.AreEqual(new VBounds(new Vec3(0, 0, 0), new Vec3(1, 1, 0)), tree.Bounds);
+    }
+
+    [Test]
+    public void RTreeTestAddLots()
+    {
+        RTree<Vec3> tree = new RTree<Vec3>();
+        ClRand rand = new ClRand(3);
+
+        for(int i = 0; i < 100; i++)
+        {
+            tree.Insert(rand.Vec3());
+            Assert.IsTrue(tree.IsValid());
+        }
+    }
+
+    //// A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use
+    //// `yield return null;` to skip a frame.
+    //[UnityTest]
+    //public IEnumerator RTreeTestWithEnumeratorPasses()
+    //{
+    //    // Use the Assert class to test conditions.
+    //    // Use yield to skip a frame.
+    //    yield return null;
+    //}
+}

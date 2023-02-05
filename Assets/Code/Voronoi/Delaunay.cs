@@ -119,11 +119,11 @@ namespace Growth.Voronoi
 
             foreach (var p in verts)
             {
-                b.Encapsulate(p);
+                b = b.Encapsulating(p);
             }
 
             // looks like in Unit terms, points on the edge occasionally are considered outside the bound?
-            b.Expand(0.001f);
+            b = b.ExpandedBy(0.001f);
 
             foreach (var c in verts)
             {

@@ -1,5 +1,6 @@
 ﻿using Growth.Voronoi;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,17 +13,19 @@ namespace Growth.Util
         VBounds GetBounds();
     }
 
-    public class RTree<T> where T : class, IBounded
+    public class RTree<T> : IEnumerable<T>
+        where T : class, IBounded
     {
         const int MaxChildren = 7;
         const int MinChildren = (MaxChildren + 1) / 2;
 
-        class Node
+        public class Node
         {
-            public Node Parent;
+            public Node Parent { get; private set; }
             public List<Node> Children = null;
             public T Item;
             VBounds Bound = new VBounds();
+            public int Level { get; private set; } = 0;
 
             public bool IsDirty = false;                       // when Bound needs recalculation
 
@@ -39,14 +42,7 @@ namespace Growth.Util
 
             public Node(List<Node> nodes)
             {
-                Children = nodes;
-
-                foreach(var child in Children)
-                {
-                    child.Parent = this;
-                }
-
-                IsDirty = true;
+                SetChildren(nodes);
             }
 
             public VBounds GetBound()
@@ -77,11 +73,29 @@ namespace Growth.Util
                 IsDirty = false;
             }
 
-            public bool IsValid => Item == null || Children.Count == 0;
+            public bool IsValid => Item == null || Children == null;
 
-            public bool IsEmpty => Children == null && Item == null;
+            public bool IsEmpty => Item == null && Children == null;
 
-            public bool IsLeaf => Children == null;
+            public bool IsLeaf => Item != null;
+
+            internal void SetChildren(List<Node> nodes)
+            {
+                Children = nodes;
+
+                foreach (var child in Children)
+                {
+                    child.SetParent(this);
+                }
+
+                IsDirty = true;
+            }
+
+            public void SetParent(Node node)
+            {
+                Parent = node;
+                Parent.Level = Level + 1;
+            }
         }
 
         Node Root = new Node();
@@ -89,6 +103,62 @@ namespace Growth.Util
         public RTree()
         {
             // nothing, initialisers give us an empty tree
+        }
+
+        #region IEnumerable
+        public IEnumerator<T> GetEnumerator()
+        {
+            return Enumerate().GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return Enumerate().GetEnumerator();
+        }
+        #endregion
+
+        public VBounds Bounds => Root.GetBound();
+
+        public IEnumerable<T> Enumerate()
+        {
+            foreach (Node node in EnumerateNodes(Root, false, false, true))
+            {
+                yield return node.Item;
+            }
+        }
+
+        private IEnumerable<Node> EnumerateNodes(bool include_empty, bool include_internal, bool include_leaves)
+        {
+            return EnumerateNodes(Root, include_empty, include_internal, include_leaves);
+        }
+
+        private IEnumerable<Node> EnumerateNodes(Node node, bool include_empty, bool include_internal, bool include_leaves)
+        {
+            // empty node is only ever the root, if we hit it and we did not want to return it
+            // we are done...
+            if (node.IsEmpty && include_empty)
+            {
+                yield return node;
+            }
+            else if (node.IsLeaf && include_leaves)
+            {
+                yield return node;
+            }
+            else if (include_internal)
+            {
+                yield return node;
+            }
+
+            if (node.Children != null)
+            {
+                foreach (var child in node.Children)
+                {
+                    foreach (Node child_node in EnumerateNodes(child, include_empty, include_internal, include_leaves))
+                    {
+                        yield return child_node;
+                    }
+                }
+            }
         }
 
         public IEnumerable<T> Search(VBounds b)
@@ -101,6 +171,9 @@ namespace Growth.Util
 
         private IEnumerable<T> Search(Node node, VBounds b)
         {
+            if (node.IsEmpty)
+                yield break;
+
             if (node.GetBound().Overlaps(b))
             {
                 if (node.IsLeaf)
@@ -133,9 +206,7 @@ namespace Growth.Util
 
             if (Root.IsLeaf)
             {
-                Root.Children = new List<Node> { item_node, new Node(Root.Item) };
-                Root.Item = null;
-                Root.IsDirty = true;
+                Root = new Node (new List<Node>{ item_node, Root });
             }
             else
             {
@@ -171,7 +242,7 @@ namespace Growth.Util
             if (node.Children.Count < MaxChildren)
             {
                 node.Children.Add(insert_here_node);
-                insert_here_node.Parent = node;
+                insert_here_node.SetParent(node);
                 node.IsDirty = true;
 
                 return null;
@@ -253,8 +324,7 @@ namespace Growth.Util
 
             // put half the children in the original node and return a node containing the other half for insertion into
             // our parent
-            node.Children = set1;
-            node.IsDirty = true;
+            node.SetChildren(set1);
 
             return new Node(set2);
         }
@@ -393,6 +463,59 @@ namespace Growth.Util
             }
 
             return chosen;
+        }
+
+        public bool IsValid()
+        {
+            foreach(Node n in EnumerateNodes(true, true, true))
+            {
+                if (!n.IsValid)
+                {
+                    return false;
+                }
+
+                if (Root == n && n.Parent != null)
+                {
+                    return false;
+                }
+
+                if (Root != n)
+                {
+                    if (n.Parent == null)
+                    {
+                        return false;
+                    }
+
+                    if (n.Level != n.Parent.Level - 1)
+                    {
+                        return false;
+                    }
+                }
+
+                if (n.Children != null)
+                {
+                    if (n.Children.Count > MaxChildren)
+                    {
+                        return false;
+                    }       
+                    
+                    // root node is allowed < MinChildren as that is how we accommodate small trees
+                    if (n != Root && n.Children.Count < MinChildren)
+                    {
+                        return false;
+                    }
+                }
+
+                if (n.IsLeaf)
+                {
+                    if (n.Level != 0)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
         }
     }
 }

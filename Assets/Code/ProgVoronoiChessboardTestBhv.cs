@@ -1,4 +1,4 @@
-﻿//#define PROFILE_ON
+﻿#define PROFILE_ON
 
 using System;
 using System.Collections.Generic;
