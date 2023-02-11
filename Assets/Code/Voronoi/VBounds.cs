@@ -30,6 +30,12 @@ namespace Growth.Voronoi
             Max = max;
         }
 
+        public VBounds(Vec3 v)
+        {
+            // make the zero-sized bound of a point...
+            Min = Max = v;
+        }
+
         public VBounds Encapsulating(Vec3 v)
         {
             var point_bound = new VBounds(v, v);
