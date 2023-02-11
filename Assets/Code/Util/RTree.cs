@@ -33,7 +33,7 @@ namespace Growth.Util
             VBounds Bounds = new VBounds();
             public int Level { get; private set; } = 0;
 
-            public bool IsDirty = false;                       // when Bounds need recalculation
+            public bool IsDirty { get; private set; } = false;                       // when Bound needs recalculation
 
             public Node()
             {
@@ -55,7 +55,7 @@ namespace Growth.Util
             {
                 if (IsDirty)
                 {
-                    RecalculateBound();
+                    RefreshBound();
                 }
 
                 return Bounds;
@@ -77,7 +77,7 @@ namespace Growth.Util
                 }
             }
 
-            internal void SetChildren(List<Node> nodes)
+            public void SetChildren(List<Node> nodes)
             {
                 Children = nodes;
 
@@ -86,25 +86,71 @@ namespace Growth.Util
                     child.SetParent(this);
                 }
 
-                IsDirty = true;
+                SetIsDirty();
             }
 
-            private void RecalculateBound()
+            public void SetIsDirty()
+            {
+                var n = this;
+
+                while (n != null)
+                {
+                    if (!n.IsDirty)
+                    {
+                        n.IsDirty = true;
+                        n = n.Parent;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            private void RefreshBound()
+            {
+                Bounds = RecalculateBound();
+
+                IsDirty = false;
+            }
+
+            private VBounds RecalculateBound(bool refreshing_children = true)
             {
                 if (Item != null)
                 {
-                    Bounds = Item.GetBounds();
+                    return Item.GetBounds();
                 }
                 else if (Children != null)
                 {
-                    Bounds = Children.Aggregate(new VBounds(), (b, c) => b.UnionedWith(c.GetBounds()));
-                }
-                else
-                {
-                    Bounds = new VBounds();
+                    // for unit-testing, we do not want to fix anything that might be wrong with a child, so we just peak the recalculated
+                    // bound, but for real use, if we see a dirty child we refresh them too
+                    if (refreshing_children)
+                    {
+                        // normal
+                        return Children.Aggregate(new VBounds(), (b, c) => b.UnionedWith(c.GetBounds()));
+                    }
+                    else
+                    {
+                        // unit-test
+                        return Children.Aggregate(new VBounds(), (b, c) => b.UnionedWith(c.RecalculateBound(false)));
+                    }
                 }
 
                 IsDirty = false;
+                return new VBounds();
+            }
+
+            internal bool ValidateBounds()
+            {
+                // if we know we need refreshing, nothing to check
+                if (IsDirty)
+                {
+                    return true;
+                }
+
+                var check_bound = RecalculateBound(false);
+
+                return Bounds.Equals(check_bound);
             }
         }
 
@@ -153,7 +199,7 @@ namespace Growth.Util
             if (Root.IsEmpty)
             {
                 Root.Item = item;
-                Root.IsDirty = true;
+                Root.SetIsDirty();
                 return;
             }
 
@@ -191,7 +237,7 @@ namespace Growth.Util
             if (t_n == Root)
             {
                 Root.Item = null;
-                Root.IsDirty = true;
+                Root.SetIsDirty();
             }
             else
             {
@@ -246,6 +292,11 @@ namespace Growth.Util
                     {
                         return false;
                     }
+                }
+
+                if (!n.ValidateBounds())
+                {
+                    return false;
                 }
             }
 
@@ -334,7 +385,7 @@ namespace Growth.Util
             {
                 search_node.Children.Add(insert_here_node);
                 insert_here_node.SetParent(search_node);
-                search_node.IsDirty = true;
+                search_node.SetIsDirty();
 
                 return null;
             }
@@ -562,7 +613,7 @@ namespace Growth.Util
             MyAssert.IsTrue(remove_from.Children != null, "Removing from node with no Children list...");
             MyAssert.IsTrue(remove_from.Children.Count > 0, "Removing from node with empty Children list...");
             remove_from.Children.Remove(node);
-            remove_from.IsDirty = true;
+            remove_from.SetIsDirty();
 
             if (remove_from == Root)
             {
