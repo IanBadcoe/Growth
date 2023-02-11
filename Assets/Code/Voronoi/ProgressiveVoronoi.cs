@@ -315,7 +315,8 @@ namespace Growth.Voronoi
                     {
                         // in here, we are a new face to the neighbour as well...
                         neighbour.FacesMap[point] = face;
-                    }                }
+                    }
+                }
                 else
                 {
                     // the face our neighbour has is backwards compared to what we want...
