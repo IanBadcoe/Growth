@@ -13,11 +13,17 @@ namespace Growth.Util
         VBounds GetBounds();
     }
 
-    public class RTree<T> : IEnumerable<T>
+    public interface IReadOnlyRTree<T> : IEnumerable<T>
+    {
+        VBounds Bounds { get; }
+        IEnumerable<T> Search(VBounds b);
+    }
+
+    public class RTree<T> : IReadOnlyRTree<T>
         where T : class, IBounded
     {
-        const int MaxChildren = 7;
-        const int MinChildren = (MaxChildren + 1) / 2;
+        const int MinChildren = 4;
+        const int MaxChildren = MinChildren * 2 - 1;
 
         public class Node
         {
