@@ -5,6 +5,16 @@ using UnityEngine;
 
 namespace Growth.Voronoi
 {
+    // C# equality is a total mess, having a policy here of:
+    // - never override operator ==/!=
+    // -- so that x != null always means pure reference comparison
+    // - never override Equals(object obj)
+    // -- so we get type-safety on x.Equals(y)
+    // - use T.Equals(T other) for _value_ compare
+    // -- so it errors for null
+    // -- which is the override for IEquatable<T> which at least some of the built-in containers use
+    // - and override GetHashCode when you override that, also for containers...
+
     // purpose here is to have an immutable 3d vector type, Unity's is mutable...
     [DebuggerDisplay("({X}, {Y}, {Z})")]
     public class Vec3Int : IEquatable<Vec3Int>

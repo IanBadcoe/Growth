@@ -4,7 +4,17 @@ using UnityEngine;
 
 namespace Growth.Voronoi
 {
-    // the only purpose here is to make a Vec3 version of the wrapped UnityEngine.Bounds
+    // C# equality is a total mess, having a policy here of:
+    // - never override operator ==/!=
+    // -- so that x != null always means pure reference comparison
+    // - never override Equals(object obj)
+    // -- so we get type-safety on x.Equals(y)
+    // - use T.Equals(T other) for _value_ compare
+    // -- so it errors for null
+    // -- which is the override for IEquatable<T> which at least some of the built-in containers use
+    // - and override GetHashCode when you override that, also for containers...
+
+    // immutable bounds object...
     public class VBounds : IEquatable<VBounds>
     {
         public Vec3 Min { get; }
@@ -114,10 +124,12 @@ namespace Growth.Voronoi
                 || b.Min.Z > Max.Z;
         }
 
+        #region IEquatable
         public bool Equals(VBounds other)
         {
             return Min.Equals(other.Min) && Max.Equals(other.Max); 
         }
+        #endregion
 
         public override int GetHashCode()
         {
