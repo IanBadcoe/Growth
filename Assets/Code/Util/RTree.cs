@@ -15,7 +15,7 @@ namespace Growth.Util
 
     public interface IReadOnlyRTree<T> : IEnumerable<T>
     {
-        VBounds Bounds { get; }
+        VBounds GetBounds();
         IEnumerable<T> Search(VBounds b);
     }
 
@@ -30,10 +30,10 @@ namespace Growth.Util
             public Node Parent { get; private set; }
             public List<Node> Children = null;
             public T Item;
-            VBounds Bound = new VBounds();
+            VBounds Bounds = new VBounds();
             public int Level { get; private set; } = 0;
 
-            public bool IsDirty = false;                       // when Bound needs recalculation
+            public bool IsDirty = false;                       // when Bounds need recalculation
 
             public Node()
             {
@@ -51,14 +51,14 @@ namespace Growth.Util
                 SetChildren(nodes);
             }
 
-            public VBounds GetBound()
+            public VBounds GetBounds()
             {
                 if (IsDirty)
                 {
                     RecalculateBound();
                 }
 
-                return Bound;
+                return Bounds;
             }
 
             public bool IsValid => Item == null || Children == null;
@@ -93,15 +93,15 @@ namespace Growth.Util
             {
                 if (Item != null)
                 {
-                    Bound = Item.GetBounds();
+                    Bounds = Item.GetBounds();
                 }
                 else if (Children != null)
                 {
-                    Bound = Children.Aggregate(new VBounds(), (b, c) => b.UnionedWith(c.GetBound()));
+                    Bounds = Children.Aggregate(new VBounds(), (b, c) => b.UnionedWith(c.GetBounds()));
                 }
                 else
                 {
-                    Bound = new VBounds();
+                    Bounds = new VBounds();
                 }
 
                 IsDirty = false;
@@ -127,7 +127,10 @@ namespace Growth.Util
         }
         #endregion
 
-        public VBounds Bounds => Root.GetBound();
+        public VBounds GetBounds()
+        {
+            return Root.GetBounds();
+        }
 
         public IEnumerable<T> Enumerate()
         {
@@ -288,7 +291,7 @@ namespace Growth.Util
             if (node.IsEmpty)
                 yield break;
 
-            if (node.GetBound().Overlaps(b))
+            if (node.GetBounds().Overlaps(b))
             {
                 if (node.IsLeaf)
                 {
@@ -348,8 +351,8 @@ namespace Growth.Util
             List<Node> set1 = new List<Node> { extremes.Item1 };
             List<Node> set2 = new List<Node> { extremes.Item2 };
 
-            VBounds bound1 = extremes.Item1.GetBound();
-            VBounds bound2 = extremes.Item2.GetBound();
+            VBounds bound1 = extremes.Item1.GetBounds();
+            VBounds bound2 = extremes.Item2.GetBounds();
 
             float volume1 = bound1.Volume + 1;
             float volume2 = bound2.Volume + 1;
@@ -366,8 +369,8 @@ namespace Growth.Util
                 }
                 else
                 {
-                    VBounds new_bound1 = bound1.UnionedWith(child.GetBound());
-                    VBounds new_bound2 = bound2.UnionedWith(child.GetBound());
+                    VBounds new_bound1 = bound1.UnionedWith(child.GetBounds());
+                    VBounds new_bound2 = bound2.UnionedWith(child.GetBounds());
 
                     float new_volume1 = new_bound1.Volume + 1;
                     float new_volume2 = new_bound2.Volume + 1;
@@ -419,10 +422,10 @@ namespace Growth.Util
 
         private Tuple<Node, Node> FindExtremes(List<Node> nodes)
         {
-            // max_x will be the highest, _minimum_ x on a bound
+            // max_x will be the highest, _minimum_ x on a node's bounds
             // and min_x will be the lowest _maximum_ x
             // and that finds the bounds with the highest separation
-            // (and cannot find the same bound, twice)
+            // (and cannot find the same node twice)
 
             float max_x = float.MinValue;
             float max_y = float.MinValue;
@@ -442,7 +445,7 @@ namespace Growth.Util
 
             foreach (var node in nodes)
             {
-                VBounds b = node.GetBound();
+                VBounds b = node.GetBounds();
 
                 if (max_x < b.Min.X)
                 {
@@ -515,8 +518,8 @@ namespace Growth.Util
 
             // the +1s allow us to divide, even if the original volume was zero
             // without changing which ratios are bigger that each other...
-            float new_volume = chosen.GetBound().UnionedWith(insert_leaf_node.GetBound()).Volume + 1;
-            float old_volume = chosen.GetBound().Volume + 1;
+            float new_volume = chosen.GetBounds().UnionedWith(insert_leaf_node.GetBounds()).Volume + 1;
+            float old_volume = chosen.GetBounds().Volume + 1;
 
             chosen_growth_ratio = new_volume / old_volume;
             if (chosen_growth_ratio == 1)
@@ -526,7 +529,7 @@ namespace Growth.Util
 
             foreach (var child in children.Skip(1))
             {
-                new_volume = child.GetBound().UnionedWith(insert_leaf_node.GetBound()).Volume + 1;
+                new_volume = child.GetBounds().UnionedWith(insert_leaf_node.GetBounds()).Volume + 1;
 
                 if (chosen_volume != 0 && new_volume < chosen_volume)
                 {
@@ -535,7 +538,7 @@ namespace Growth.Util
                     continue;
                 }
 
-                old_volume = child.GetBound().Volume + 1;
+                old_volume = child.GetBounds().Volume + 1;
 
                 float growth_ratio = new_volume / old_volume;
                 if (growth_ratio < chosen_growth_ratio)

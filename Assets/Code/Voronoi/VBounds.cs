@@ -42,7 +42,7 @@ namespace Growth.Voronoi
 
         public VBounds(Vec3 v)
         {
-            // make the zero-sized bound of a point...
+            // make the zero-sized bounds for a point...
             Min = Max = v;
         }
 

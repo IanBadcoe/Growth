@@ -17,25 +17,25 @@ public class RTreeTest
 
         Assert.AreEqual(0, tree.Count());
         Assert.IsTrue(tree.IsValid());
-        Assert.IsTrue(tree.Bounds.IsEmpty);
+        Assert.IsTrue(tree.GetBounds().IsEmpty);
 
         tree.Insert(new Vec3(0, 0, 0));
 
         Assert.AreEqual(1, tree.Count());
         Assert.IsTrue(tree.IsValid());
-        Assert.AreEqual(new VBounds(new Vec3(0, 0, 0), new Vec3(0, 0, 0)), tree.Bounds);
+        Assert.AreEqual(new VBounds(new Vec3(0, 0, 0), new Vec3(0, 0, 0)), tree.GetBounds());
 
         tree.Insert(new Vec3(1, 0, 0));
 
         Assert.AreEqual(2, tree.Count());
         Assert.IsTrue(tree.IsValid());
-        Assert.AreEqual(new VBounds(new Vec3(0, 0, 0), new Vec3(1, 0, 0)), tree.Bounds);
+        Assert.AreEqual(new VBounds(new Vec3(0, 0, 0), new Vec3(1, 0, 0)), tree.GetBounds());
 
         tree.Insert(new Vec3(0, 1, 0));
 
         Assert.AreEqual(3, tree.Count());
         Assert.IsTrue(tree.IsValid());
-        Assert.AreEqual(new VBounds(new Vec3(0, 0, 0), new Vec3(1, 1, 0)), tree.Bounds);
+        Assert.AreEqual(new VBounds(new Vec3(0, 0, 0), new Vec3(1, 1, 0)), tree.GetBounds());
     }
 
     [Test]

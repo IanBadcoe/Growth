@@ -64,7 +64,7 @@ namespace Growth.Voronoi
 
             foreach (var v1 in d.Verts)
             {
-                // not interested in trying to find polyhedra for the verts we added just to make a bound...
+                // not interested in trying to find polyhedra for the verts we added just to make a boundary...
                 if (d.GetVertTags(v1).Contains("bound"))
                 {
                     continue;
