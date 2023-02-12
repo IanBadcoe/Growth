@@ -57,7 +57,7 @@ namespace Growth.Util
         {
         }
 
-        public object RandomFromList<T>(List<T> list)
+        public T RandomFromList<T>(List<T> list)
         {
             return list[IntRange(0, list.Count)];
         }
