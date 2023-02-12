@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -71,18 +72,32 @@ namespace Growth.Util
         [System.Diagnostics.Conditional("PROFILE_ON")]
         public static void Dump()
         {
-            System.Diagnostics.Debug.Write("By section name\n");
+            foreach(var s in DumpToEnum())
+            {
+                System.Diagnostics.Debug.Write(s);
+            }
+        }
+
+        [System.Diagnostics.Conditional("PROFILE_ON")]
+        public static void Dump(string filename)
+        {
+            File.WriteAllLinesAsync(filename, DumpToEnum());
+        }
+
+        public static IEnumerable<string> DumpToEnum()
+        {
+            yield return "By section name\n";
 
             foreach (var pair in SliceTimings.OrderBy(p => p.Key))
             {
-                System.Diagnostics.Debug.Write($"{pair.Key}\t->\t{pair.Value}");
+                yield return $"{pair.Key}\t->\t{pair.Value}";
             }
 
-            System.Diagnostics.Debug.Write("By stack path\n");
+            yield return "\n\nBy stack path\n";
 
             foreach (var pair in StackTimings.OrderBy(p => p.Key))
             {
-                System.Diagnostics.Debug.Write($"{pair.Key}\t->\t{pair.Value}");
+                yield return $"{pair.Key}\t->\t{pair.Value}";
             }
         }
 

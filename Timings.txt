@@ -114,3 +114,59 @@ Outer	->	17.73221
 
 ---
 
+Merge polyhedron points using R-Tree
+
+Row 0 time 0.373991
+Row 1 time 0.4226608
+Row 2 time 0.3458157
+Row 3 time 0.3612022
+Row 4 time 0.3865757
+Row 5 time 0.4029789
+Row 6 time 0.4965134
+Row 7 time 0.4945507
+Row 8 time 0.5296059
+Row 9 time 0.5961952
+Row 10 time 0.5749912
+Row 11 time 0.67803
+Row 12 time 0.6616306
+Row 13 time 0.7338257
+Row 14 time 0.6807575
+Row 15 time 0.7481861
+
+Voronoi time 8.487698
+
+Mesh time 0.147438
+
+
+Total time 8.635136
+
+By section name
+
+Adding Points	->	3.644783
+AddPoint	->	8.354824
+AddPointInner	->	3.599852
+Face ctor	->	0.02267265
+FindFromVert	->	0.01714325
+FindTets	->	3.163349
+Generate Polyhedron	->	4.704906
+Loop	->	0.07765198
+MergeVerts	->	0.8531513
+Outer	->	8.636488
+By stack path
+
+  |  Outer	->	8.636488
+  |  Outer  |  AddPoint	->	8.354824
+  |  Outer  |  AddPoint  |  Adding Points	->	3.644783
+  |  Outer  |  AddPoint  |  Adding Points  |  AddPointInner	->	3.599852
+  |  Outer  |  AddPoint  |  Generate Polyhedron	->	4.704906
+  |  Outer  |  AddPoint  |  Generate Polyhedron  |  Face ctor	->	0.02267265
+  |  Outer  |  AddPoint  |  Generate Polyhedron  |  FindFromVert	->	0.01714325
+  |  Outer  |  AddPoint  |  Generate Polyhedron  |  FindTets	->	3.163349
+  |  Outer  |  AddPoint  |  Generate Polyhedron  |  Loop	->	0.07765198
+  |  Outer  |  AddPoint  |  Generate Polyhedron  |  MergeVerts	->	0.8531513
+
+(w/o profiling thats 8.3)
+
+(30ms per added cell)
+
+(~2x as fast in non-editor build...)

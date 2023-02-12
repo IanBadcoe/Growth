@@ -87,6 +87,8 @@ namespace Growth
 
                 PoorMansProfiler.Dump();
 
+                PoorMansProfiler.Dump(Application.persistentDataPath + "\\profile.txt");
+
                 running = false;
             }
         }

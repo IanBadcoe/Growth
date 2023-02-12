@@ -330,10 +330,6 @@ namespace Growth.Voronoi
                     //PoorMansProfiler.Start("AddFace");
                     point.PolyhedronRW.AddFace(face);
                     //PoorMansProfiler.End("AddFace");
-
-                    // currently our use-case is building a poly for one (new) point at a time,
-                    // so no need to add the face to any poly on the neighbour
-                    // but other types of update might need that in time...
                 }
             }
         }
