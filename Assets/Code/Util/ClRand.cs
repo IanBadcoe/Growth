@@ -2,6 +2,7 @@
 using UnityEngine;
 using System.Linq;
 using Growth.Voronoi;
+using System.Collections.Generic;
 
 namespace Growth.Util
 {
@@ -54,6 +55,11 @@ namespace Growth.Util
         public ClRand()
             : this(Environment.TickCount)
         {
+        }
+
+        public object RandomFromList<T>(List<T> list)
+        {
+            return list[IntRange(0, list.Count)];
         }
 
         public ClRand(int Seed)
