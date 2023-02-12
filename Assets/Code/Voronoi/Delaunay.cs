@@ -223,9 +223,7 @@ namespace Growth.Voronoi
             }
 
             // remove the encapsulating verts we started with, and any associated tets
-            var encapsulating_vert_tets = TetsForVert(c0).Concat(TetsForVert(c1)).Concat(TetsForVert(c2)).Concat(TetsForVert(c3)).Distinct().ToList();
-
-            var initial_vert_tets = TetsRW.Where(tet => encapsulating_vert_tets.Contains(tet)).ToList();
+            var initial_vert_tets = TetsForVert(c0).Concat(TetsForVert(c1)).Concat(TetsForVert(c2)).Concat(TetsForVert(c3)).Distinct().ToList();
 
             foreach (var tet in initial_vert_tets)
             {
