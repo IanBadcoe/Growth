@@ -41,6 +41,11 @@ namespace Growth
                 running = !running;
             }
 
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                Application.Quit();
+            }
+
             if (running)
             {
                 PoorMansProfiler.Reset();
