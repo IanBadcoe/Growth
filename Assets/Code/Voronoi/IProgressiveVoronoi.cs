@@ -46,7 +46,10 @@ namespace Growth.Voronoi
                                                     // which are only there for us, they need to delete too...
         IProgressivePoint Point(Vec3Int pos);
 
-        public IEnumerable<Vec3Int> AllGridNeighbours(Vec3Int pnt);
+        // vaccuum points are allowed right up to the grid edge
+        // solid points must be one cell in (so they can be bounded by vacuum)
+        public IEnumerable<Vec3Int> AllGridNeighbours(Vec3Int pnt,
+            IProgressiveVoronoi.Solidity permitted_for = IProgressiveVoronoi.Solidity.Vacuum);
 
         IEnumerable<IProgressivePoint> AllPoints { get; }
 

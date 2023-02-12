@@ -163,11 +163,11 @@ namespace Growth.Voronoi
             throw new System.NotImplementedException();
         }
 
-        public IEnumerable<Vec3Int> AllGridNeighbours(Vec3Int pnt)
+        public IEnumerable<Vec3Int> AllGridNeighbours(Vec3Int pnt, IProgressiveVoronoi.Solidity permitted_for = IProgressiveVoronoi.Solidity.Vacuum)
         {
             foreach (var n in pnt.AllNeighbours)
             {
-                if (InRange(n, IProgressiveVoronoi.Solidity.Vacuum))
+                if (InRange(n, permitted_for))
                 {
                     yield return n;
                 }
@@ -339,7 +339,7 @@ namespace Growth.Voronoi
         {
             PoorMansProfiler.Start("FindTets");
             // find all the tets that use this edge
-            var edge_tets = Delaunay.TetsForVert(our_point).Where(tet => tet.UsesVert(other_point)).ToList();
+            var edge_tets = Delaunay.TetsForVert(our_point).Where(tet => tet.UsesVert(other_point)).Distinct().ToList();
             PoorMansProfiler.End("FindTets");
 
             var face_verts = new List<Vec3>();
