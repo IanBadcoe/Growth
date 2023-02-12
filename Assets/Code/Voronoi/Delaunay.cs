@@ -1,4 +1,4 @@
-﻿#define PROFILE_ON
+﻿//#define PROFILE_ON
 
 using Growth.Util;
 using System;
@@ -112,32 +112,36 @@ namespace Growth.Voronoi
 
         public void AddVert(Vec3 vert)
         {
-            PoorMansProfiler.Start("Delaunay.AddVert");
-            PoorMansProfiler.Start("Delaunay.Find Tets");
+            PoorMansProfiler.Start("AddVert");
+            PoorMansProfiler.Start("Find Tets");
             // SPATIAL SEARCH
             List<DTetrahedron> bad_tets = Tets.Where(tet => tet.Sphere.Contains(vert, Tolerance)).ToList();
-            PoorMansProfiler.End("Delaunay.Find Tets");
+            PoorMansProfiler.End("Find Tets");
 
-            PoorMansProfiler.Start("Delaunay.Build Triangular Poly");
+            PoorMansProfiler.Start("Build Triangular Poly");
             TriangularPolyhedron pt = new TriangularPolyhedron(bad_tets);
-            PoorMansProfiler.End("Delaunay.Build Triangular Poly");
+            PoorMansProfiler.End("Build Triangular Poly");
 
-            PoorMansProfiler.Start("Delaunay.Remove Tets");
+            PoorMansProfiler.Start("Remove Tets");
             foreach (var tet in bad_tets)
             {
                 RemoveTetInner(tet);
             }
-            PoorMansProfiler.End("Delaunay.Remove Tets");
+            PoorMansProfiler.End("Remove Tets");
 
-            PoorMansProfiler.Start("Delaunay.Add Tets");
+            PoorMansProfiler.Start("Add Tets");
             foreach (var tri in pt.TriFaces)
             {
+                PoorMansProfiler.Start("Tet Ctor");
                 var tet = new DTetrahedron(vert, tri.V1, tri.V2, tri.V3);
+                PoorMansProfiler.End("Tet Ctor");
 
+                PoorMansProfiler.Start("AddTet");
                 AddTet(tet);
+                PoorMansProfiler.End("AddTet");
             }
-            PoorMansProfiler.End("Delaunay.Add Tets");
-            PoorMansProfiler.End("Delaunay.AddVert");
+            PoorMansProfiler.End("Add Tets");
+            PoorMansProfiler.End("AddVert");
         }
 
         private void RemoveTetInner(DTetrahedron tet)
@@ -186,15 +190,15 @@ namespace Growth.Voronoi
 
             foreach (var c in b.Corners)
             {
-                MyAssert.IsTrue(bounding_tet.Sphere.Contains(c, 0), "Corner not in circumsphere");
+                MyAssert.IsTrue(bounding_tet.Sphere.Contains(c, -Tolerance / 10), "Bounds corner not in circumsphere");
             }
             foreach (var c in new Vec3[] {c0, c1, c2, c3})
             {
-                MyAssert.IsTrue(bounding_tet.Sphere.Contains(c, 0), "Corner not in circumsphere");
+                MyAssert.IsTrue(bounding_tet.Sphere.Contains(c, -Tolerance / 10), "Tet corner not in circumsphere");
             }
             foreach (var c in verts)
             {
-                MyAssert.IsTrue(bounding_tet.Sphere.Contains(c, 0), "Corner not in circumsphere");
+                MyAssert.IsTrue(bounding_tet.Sphere.Contains(c, -Tolerance / 10), "Vert not in circumsphere");
             }
 
 

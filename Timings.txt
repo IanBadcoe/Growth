@@ -204,7 +204,51 @@ By stack path
   |  Outer  |  AddPoint  |  Generate Polyhedron  |  Loop	->	0.04325771
   |  Outer  |  AddPoint  |  Generate Polyhedron  |  MergeVerts	->	0.4927454
 
---
+---
 
 Turn on Delaunay profiling:
 
+Try Sphere solver in single precision
+
+By section name
+
+Add Tets	->	1.438101
+Adding Points	->	2.48537
+AddPoint	->	3.331527
+AddPointInner	->	2.463347
+AddTet	->	0.06280041
+AddVert	->	2.458647
+Build Triangular Poly	->	0.3232579
+Face ctor	->	0.01159716
+Find Tets	->	0.6207538
+FindFromVert	->	0.008169651
+FindTets	->	0.02575445
+Generate Polyhedron	->	0.8441634
+Loop	->	0.03945398
+MergeVerts	->	0.5059524
+Outer	->	3.387087
+Remove Tets	->	0.05000591
+Tet Ctor	->	0.9857779
+
+
+By stack path
+
+  |  Outer	->	3.387087
+  |  Outer  |  AddPoint	->	3.331527
+  |  Outer  |  AddPoint  |  Adding Points	->	2.48537
+  |  Outer  |  AddPoint  |  Adding Points  |  AddPointInner	->	2.463347
+  |  Outer  |  AddPoint  |  Adding Points  |  AddPointInner  |  AddVert	->	2.458647
+  |  Outer  |  AddPoint  |  Adding Points  |  AddPointInner  |  AddVert  |  Add Tets	->	1.438101
+  |  Outer  |  AddPoint  |  Adding Points  |  AddPointInner  |  AddVert  |  Add Tets  |  AddTet	->	0.06280041
+  |  Outer  |  AddPoint  |  Adding Points  |  AddPointInner  |  AddVert  |  Add Tets  |  Tet Ctor	->	0.9857779
+  |  Outer  |  AddPoint  |  Adding Points  |  AddPointInner  |  AddVert  |  Build Triangular Poly	->	0.3232579
+  |  Outer  |  AddPoint  |  Adding Points  |  AddPointInner  |  AddVert  |  Find Tets	->	0.6207538
+  |  Outer  |  AddPoint  |  Adding Points  |  AddPointInner  |  AddVert  |  Remove Tets	->	0.05000591
+  |  Outer  |  AddPoint  |  Generate Polyhedron	->	0.8441634
+  |  Outer  |  AddPoint  |  Generate Polyhedron  |  Face ctor	->	0.01159716
+  |  Outer  |  AddPoint  |  Generate Polyhedron  |  FindFromVert	->	0.008169651
+  |  Outer  |  AddPoint  |  Generate Polyhedron  |  FindTets	->	0.02575445
+  |  Outer  |  AddPoint  |  Generate Polyhedron  |  Loop	->	0.03945398
+  |  Outer  |  AddPoint  |  Generate Polyhedron  |  MergeVerts	->	0.5059524
+
+---

@@ -8,7 +8,8 @@ namespace Growth.Voronoi
     {
         public CircumSphere(IReadOnlyList<Vec3> Verts)
         {
-            var css = new CircumcentreSolver(Verts[0], Verts[1], Verts[2], Verts[3]);
+            //var css = new CircumcentreSolver(Verts[0], Verts[1], Verts[2], Verts[3]);  <-- double-precision version
+            var css = new CircumcentreSolverFloat(Verts[0], Verts[1], Verts[2], Verts[3]);
 
             Valid = css.Valid;
             Centre = css.Centre;
