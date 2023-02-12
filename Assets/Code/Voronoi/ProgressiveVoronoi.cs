@@ -339,7 +339,7 @@ namespace Growth.Voronoi
         {
             PoorMansProfiler.Start("FindTets");
             // find all the tets that use this edge
-            var edge_tets = Delaunay.Tets.Where(tet => tet.UsesVert(our_point) && tet.UsesVert(other_point)).ToList();
+            var edge_tets = Delaunay.TetsForVert(our_point).Where(tet => tet.UsesVert(other_point)).ToList();
             PoorMansProfiler.End("FindTets");
 
             var face_verts = new List<Vec3>();

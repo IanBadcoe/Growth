@@ -1,4 +1,4 @@
-﻿//#define PROFILE_ON
+﻿#define PROFILE_ON
 
 using Growth.Util;
 using System;
@@ -13,6 +13,8 @@ namespace Growth.Voronoi
         public Delaunay(float tolerance)
         {
             TetsRW = new HashSet<DTetrahedron>();
+            VecToTet = new Dictionary<Vec3, List<DTetrahedron>>();
+
             Tolerance = tolerance;
             Tags = new Dictionary<Vec3, List<String>>();
         }
@@ -21,7 +23,8 @@ namespace Growth.Voronoi
         {
             // this works because Vec3, CircumSphere and DTetrahedron are all immutable, so by cloning the current state
             // of old we are good to be valid in that state forever...
-            TetsRW = TetsRW;
+            TetsRW = new HashSet<DTetrahedron>(old.TetsRW);
+            VecToTet = new Dictionary<Vec3, List<DTetrahedron>>(old.VecToTet);
             Tolerance = old.Tolerance;
             Tags = old.Tags;
         }
@@ -29,11 +32,22 @@ namespace Growth.Voronoi
         // HashSet keys off Reference identity, not any sort of geometry,
         // because all we need to do is find items we already have and remove them...
         HashSet<DTetrahedron> TetsRW { get; }
+        Dictionary<Vec3, List<DTetrahedron>> VecToTet { get; }
 
         Dictionary<Vec3, List<String>> Tags;
 
         #region IDelaunay
         public IEnumerable<DTetrahedron> Tets => TetsRW;
+        public IEnumerable<DTetrahedron> TetsForVert(Vec3 vert)
+        {
+            if (VecToTet.ContainsKey(vert))
+            {
+                foreach(var tet in VecToTet[vert])
+                {
+                    yield return tet;
+                }
+            }
+        }
         public IEnumerable<Vec3> Verts => Tets.SelectMany(x => x.Verts).Distinct();
         public IDelaunay Clone()
         {
@@ -60,6 +74,19 @@ namespace Growth.Voronoi
         public void AddTet(DTetrahedron tet)
         {
             TetsRW.Add(tet);
+
+            foreach(var v in tet.Verts)
+            {
+                List<DTetrahedron> tets;
+                
+                if (!VecToTet.TryGetValue(v, out tets))
+                {
+                    tets = new List<DTetrahedron>();
+                    VecToTet[v] = tets;
+                }
+
+                tets.Add(tet);
+            }
         }
 
         public bool Validate()
@@ -83,12 +110,12 @@ namespace Growth.Voronoi
             return true;
         }
 
-        public void AddVert(Vec3 v)
+        public void AddVert(Vec3 vert)
         {
             PoorMansProfiler.Start("Delaunay.AddVert");
             PoorMansProfiler.Start("Delaunay.Find Tets");
             // SPATIAL SEARCH
-            List<DTetrahedron> bad_tets = Tets.Where(tet => tet.Sphere.Contains(v, Tolerance)).ToList();
+            List<DTetrahedron> bad_tets = Tets.Where(tet => tet.Sphere.Contains(vert, Tolerance)).ToList();
             PoorMansProfiler.End("Delaunay.Find Tets");
 
             PoorMansProfiler.Start("Delaunay.Build Triangular Poly");
@@ -98,19 +125,29 @@ namespace Growth.Voronoi
             PoorMansProfiler.Start("Delaunay.Remove Tets");
             foreach (var tet in bad_tets)
             {
-                TetsRW.Remove(tet);
+                RemoveTetInner(tet);
             }
             PoorMansProfiler.End("Delaunay.Remove Tets");
 
             PoorMansProfiler.Start("Delaunay.Add Tets");
             foreach (var tri in pt.TriFaces)
             {
-                var tet = new DTetrahedron(v, tri.V1, tri.V2, tri.V3);
+                var tet = new DTetrahedron(vert, tri.V1, tri.V2, tri.V3);
 
                 AddTet(tet);
             }
             PoorMansProfiler.End("Delaunay.Add Tets");
             PoorMansProfiler.End("Delaunay.AddVert");
+        }
+
+        private void RemoveTetInner(DTetrahedron tet)
+        {
+            TetsRW.Remove(tet);
+
+            foreach (var v in tet.Verts)
+            {
+                VecToTet[v].Remove(tet);
+            }
         }
 
         public void InitialiseWithVerts(Vec3[] verts)
@@ -177,7 +214,12 @@ namespace Growth.Voronoi
             // remove the encapsulating verts we started with, and any associated tets
             var encapsulating_vert_tets = Tets.Where(x => x.UsesVert(c0) || x.UsesVert(c1) || x.UsesVert(c2) || x.UsesVert(c3)).ToList();
 
-            TetsRW.RemoveWhere(tet => encapsulating_vert_tets.Contains(tet));
+            var initial_vert_tets = TetsRW.Where(tet => encapsulating_vert_tets.Contains(tet)).ToList();
+
+            foreach (var tet in initial_vert_tets)
+            {
+                RemoveTetInner(tet);
+            }
 
             MyAssert.IsTrue(!Verts.Contains(c0), "Initial vert not found");
             MyAssert.IsTrue(!Verts.Contains(c1), "Initial vert not found");

@@ -170,3 +170,41 @@ By stack path
 (30ms per added cell)
 
 (~2x as fast in non-editor build...)
+
+---
+
+Dictionary of verts -> tets for fast finding
+
+PLUS this now out-of-editor timing which is approx 40% faster:
+
+By section name
+
+Adding Points	->	2.187659
+AddPoint	->	3.022215
+AddPointInner	->	2.157339
+Face ctor	->	0.01450014
+FindFromVert	->	0.007039547
+FindTets	->	0.02613831
+Generate Polyhedron	->	0.8330116
+Loop	->	0.04325771
+MergeVerts	->	0.4927454
+Outer	->	3.076091
+
+
+By stack path
+
+  |  Outer	->	3.076091
+  |  Outer  |  AddPoint	->	3.022215
+  |  Outer  |  AddPoint  |  Adding Points	->	2.187659
+  |  Outer  |  AddPoint  |  Adding Points  |  AddPointInner	->	2.157339
+  |  Outer  |  AddPoint  |  Generate Polyhedron	->	0.8330116
+  |  Outer  |  AddPoint  |  Generate Polyhedron  |  Face ctor	->	0.01450014
+  |  Outer  |  AddPoint  |  Generate Polyhedron  |  FindFromVert	->	0.007039547
+  |  Outer  |  AddPoint  |  Generate Polyhedron  |  FindTets	->	0.02613831
+  |  Outer  |  AddPoint  |  Generate Polyhedron  |  Loop	->	0.04325771
+  |  Outer  |  AddPoint  |  Generate Polyhedron  |  MergeVerts	->	0.4927454
+
+--
+
+Turn on Delaunay profiling:
+

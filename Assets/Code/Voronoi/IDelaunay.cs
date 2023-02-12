@@ -7,6 +7,7 @@ namespace Growth.Voronoi
     {
         public IDelaunay Clone();
         public IEnumerable<DTetrahedron> Tets { get; }
+        public IEnumerable<DTetrahedron> TetsForVert(Vec3 vert);
         public IEnumerable<Vec3> Verts { get; }
         public List<String> GetVertTags(Vec3 v);
         public float Tolerance { get; }
