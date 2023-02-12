@@ -48,7 +48,7 @@ namespace Growth.Voronoi
                 }
             }
         }
-        public IEnumerable<Vec3> Verts => Tets.SelectMany(x => x.Verts).Distinct();
+        public IEnumerable<Vec3> Verts => VecToTet.Keys;
         public IDelaunay Clone()
         {
             return new Delaunay(this);
@@ -150,7 +150,14 @@ namespace Growth.Voronoi
 
             foreach (var v in tet.Verts)
             {
-                VecToTet[v].Remove(tet);
+                if (VecToTet[v].Count == 1)
+                {
+                    VecToTet.Remove(v);
+                }
+                else
+                {
+                    VecToTet[v].Remove(tet);
+                }
             }
         }
 
@@ -216,7 +223,7 @@ namespace Growth.Voronoi
             }
 
             // remove the encapsulating verts we started with, and any associated tets
-            var encapsulating_vert_tets = Tets.Where(x => x.UsesVert(c0) || x.UsesVert(c1) || x.UsesVert(c2) || x.UsesVert(c3)).ToList();
+            var encapsulating_vert_tets = TetsForVert(c0).Concat(TetsForVert(c1)).Concat(TetsForVert(c2)).Concat(TetsForVert(c3)).Distinct().ToList();
 
             var initial_vert_tets = TetsRW.Where(tet => encapsulating_vert_tets.Contains(tet)).ToList();
 

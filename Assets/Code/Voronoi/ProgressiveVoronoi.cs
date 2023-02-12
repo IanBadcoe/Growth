@@ -461,8 +461,7 @@ namespace Growth.Voronoi
 
         private IEnumerable<ProgressivePoint> PointNeighbours(IProgressivePoint point)
         {
-            return Delaunay.Tets
-                .Where(tet => tet.UsesVert(point.Position))
+            return Delaunay.TetsForVert(point.Position)
                 .SelectMany(tet => tet.Verts)
                 .Where(vert => vert != point.Position)
                 .Distinct()
