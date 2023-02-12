@@ -25,7 +25,7 @@ namespace Growth
         ClRand Random;
         IProgressiveVoronoi Voronoi;
 
-        Dictionary<IProgressivePoint, GameObject> InstantiatedMeshes = new Dictionary<IProgressivePoint, GameObject>();
+        Dictionary<IProgressivePoint, GameObject> GameObjects = new Dictionary<IProgressivePoint, GameObject>();
 
         void Start()
         {
@@ -82,7 +82,7 @@ namespace Growth
 
                 row_time = new_now;
 
-                ProgressiveInstantiateMeshes(Voronoi);
+                ProgressiveInstantiateGameObjects(Voronoi);
 
                 new_now = Time.realtimeSinceStartup;
                 System.Diagnostics.Debug.WriteLine($"Mesh time {new_now - row_time}\n");
@@ -98,20 +98,20 @@ namespace Growth
             }
         }
 
-        private void ProgressiveInstantiateMeshes(IProgressiveVoronoi ps)
+        private void ProgressiveInstantiateGameObjects(IProgressiveVoronoi ps)
         {
             foreach (var pnt in ps.AllPoints
                 .Where(p => p.Mesh != null)
-                .Where(p => !InstantiatedMeshes.ContainsKey(p)))
+                .Where(p => !GameObjects.ContainsKey(p)))
             {
                 var mat = pnt.Material;
                 MaterialIdx = (MaterialIdx + 1) % Materials.Count();
 
-                InstantiatedMeshes[pnt] = InstantiateMesh(pnt, mat);
+                GameObjects[pnt] = InstantiateGameObjects(pnt, mat);
             }
         }
 
-        private GameObject InstantiateMesh(IProgressivePoint pnt, Material mat)
+        private GameObject InstantiateGameObjects(IProgressivePoint pnt, Material mat)
         {
             var go = Instantiate(MeshTemplate, Voronoi.Cell2Vert(pnt.Cell, IProgressiveVoronoi.CellPosition.Origin).ToVector3(), Quaternion.identity, MeshContainer.transform);
 
