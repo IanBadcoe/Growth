@@ -30,7 +30,7 @@ namespace Growth.Voronoi
         // "probe_value" is the granularity for defining the bounds around the points:
         // - we extend the bounding box by this in each direction
         // - we generate additional points on that box in a square grid at this interval
-        public static IVoronoi CreateBoundedVoronoi(IEnumerable<Vec3> verts, float probe_value)
+        public static IVoronoi CreateBoundedVoronoiXX(IEnumerable<Vec3> verts, float probe_value)
         {
             VBounds b = new VBounds();
 
@@ -102,12 +102,12 @@ namespace Growth.Voronoi
                 d.TagVert(v, "bound");
             }
 
-            return CreateVoronoiInternal(d);
+            return CreateVoronoiXXInternal(d);
         }
 
-        private static IVoronoi CreateVoronoiInternal(IDelaunay d)
+        private static IVoronoi CreateVoronoiXXInternal(IDelaunay d)
         {
-            var v = new Voronoi();
+            var v = new VoronoiXX();
 
             v.InitialiseFromBoundedDelaunay(d);
 

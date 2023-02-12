@@ -7,9 +7,9 @@ using System.Linq;
 namespace Growth.Voronoi
 {
     [DebuggerDisplay("Regions: {Regions.Count}")]
-    public class Voronoi : IVoronoi
+    public class VoronoiXX : IVoronoi
     {
-        public Voronoi()
+        public VoronoiXX()
         {
             RegionsRW = new Dictionary<Vec3, VPolyhedron>();
         }
