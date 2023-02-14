@@ -16,6 +16,9 @@ namespace Growth.Assets.Code
         ClRand Random;
         bool Running = false;
 
+        int Number = 0;
+        float DecayTime = 0;
+
         // Use this for initialization
         void Start()
         {
@@ -25,6 +28,7 @@ namespace Growth.Assets.Code
             for (int i = 0; i < 10; i++)
             {
                 Voronoi.AddPoint((Random.Vec3() * 98 + new Vec3(1, 1, 1)).ToVec3Int(), IVPolyhedron.MeshType.Faces, Materials[i % Materials.Length]);
+                Number++;
             }
 
             VTB.Init(Voronoi);
@@ -35,6 +39,11 @@ namespace Growth.Assets.Code
         {
             if (Input.GetKeyDown(KeyCode.Space))
                 Running = !Running;
+
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                Application.Quit();
+            }
 
             if (!Running)
                 return;
@@ -53,6 +62,14 @@ namespace Growth.Assets.Code
             var mat = point.Material;
 
             Voronoi.AddPoint(neighb.Cell, IVPolyhedron.MeshType.Faces, mat);
+
+            Number++;
+        }
+
+        void OnGUI()
+        {
+            DecayTime = DecayTime * 0.9f + Time.deltaTime;
+            GUI.Label(new Rect(10, 10, 100, 300), $"{DecayTime / 10 * 60} <-- {Number}");
         }
     }
 }
