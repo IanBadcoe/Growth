@@ -9,7 +9,7 @@ namespace Growth.Voronoi
 {
     /// <summary>
     /// Given four points in 3D space, solves for a sphere such that all four points
-    /// lie on the sphere's surface.
+    /// lie on the sphere's surface.this
     /// </summary>
     /// <remarks>
     /// Translated from Javascript on http://www.convertalot.com/sphere_solver.html, originally
@@ -19,13 +19,14 @@ namespace Growth.Voronoi
     {
         private float m_X0, m_Y0, m_Z0;
         private float m_Radius;
+        private Vec3 Offset;
 
         /// <summary>
         /// The centre of the resulting sphere.
         /// </summary>
         public Vec3 Centre
         {
-            get { return new Vec3((float)this.m_X0, (float)this.m_Y0, (float)this.m_Z0); }
+            get { return new Vec3(m_X0, m_Y0, m_Z0) + Offset; }
         }
 
         /// <summary>
@@ -33,7 +34,7 @@ namespace Growth.Voronoi
         /// </summary>
         public float Radius
         {
-            get { return this.m_Radius; }
+            get { return m_Radius; }
         }
 
         /// <summary>
@@ -41,7 +42,7 @@ namespace Growth.Voronoi
         /// </summary>
         public bool Valid
         {
-            get { return this.m_Radius != 0; }
+            get { return m_Radius != 0; }
         }
 
         /// <summary>
@@ -54,7 +55,7 @@ namespace Growth.Voronoi
         /// <param name="d">The fourth point (array of 3 floats for X, Y, Z).</param>
         public CircumcentreSolverFloat(Vec3 a, Vec3 b, Vec3 c, Vec3 d)
         {
-            this.Compute(a, b, c, d);
+            Compute(a, b, c, d);
         }
 
         /// <summary>
@@ -62,6 +63,14 @@ namespace Growth.Voronoi
         /// </summary>
         private void Compute(Vec3 a, Vec3 b, Vec3 c, Vec3 d)
         {
+            // try to minimise the magnitude of the numbers we are pushing around in the matrix
+            Offset = (a + b + c + d) / 4;
+
+            a = a - Offset;
+            b = b - Offset;
+            c = c - Offset;
+            d = d - Offset;
+
             float[,] P =
             {
                 { a.X, a.Y, a.Z },
@@ -71,7 +80,7 @@ namespace Growth.Voronoi
             };
 
             // Compute result sphere.
-            this.Sphere(P);
+            Sphere(P);
         }
 
         private void Sphere(float[,] P)
@@ -93,7 +102,7 @@ namespace Growth.Voronoi
                 a[i, 2] = P[i, 2];
                 a[i, 3] = 1;
             }
-            m11 = this.Determinant(a, 4);
+            m11 = Determinant(a, 4);
 
             // Find minor 1, 2.
             for (int i = 0; i < 4; i++)
@@ -103,7 +112,7 @@ namespace Growth.Voronoi
                 a[i, 2] = P[i, 2];
                 a[i, 3] = 1;
             }
-            m12 = this.Determinant(a, 4);
+            m12 = Determinant(a, 4);
 
             // Find minor 1, 3.
             for (int i = 0; i < 4; i++)
@@ -113,7 +122,7 @@ namespace Growth.Voronoi
                 a[i, 2] = P[i, 2];
                 a[i, 3] = 1;
             }
-            m13 = this.Determinant(a, 4);
+            m13 = Determinant(a, 4);
 
             // Find minor 1, 4.
             for (int i = 0; i < 4; i++)
@@ -123,7 +132,7 @@ namespace Growth.Voronoi
                 a[i, 2] = P[i, 1];
                 a[i, 3] = 1;
             }
-            m14 = this.Determinant(a, 4);
+            m14 = Determinant(a, 4);
 
             // Find minor 1, 5.
             for (int i = 0; i < 4; i++)
@@ -133,22 +142,22 @@ namespace Growth.Voronoi
                 a[i, 2] = P[i, 1];
                 a[i, 3] = P[i, 2];
             }
-            m15 = this.Determinant(a, 4);
+            m15 = Determinant(a, 4);
 
             // Calculate result.
             if (m11 == 0)
             {
-                this.m_X0 = 0;
-                this.m_Y0 = 0;
-                this.m_Z0 = 0;
-                this.m_Radius = 0;
+                m_X0 = 0;
+                m_Y0 = 0;
+                m_Z0 = 0;
+                m_Radius = 0;
             }
             else
             {
-                this.m_X0 = 0.5f * m12 / m11;
-                this.m_Y0 = -0.5f * m13 / m11;
-                this.m_Z0 = 0.5f * m14 / m11;
-                this.m_Radius = Mathf.Sqrt(this.m_X0 * this.m_X0 + this.m_Y0 * this.m_Y0 + this.m_Z0 * this.m_Z0 - m15 / m11);
+                m_X0 = 0.5f * m12 / m11;
+                m_Y0 = -0.5f * m13 / m11;
+                m_Z0 = 0.5f * m14 / m11;
+                m_Radius = Mathf.Sqrt(m_X0 * m_X0 + m_Y0 * m_Y0 + m_Z0 * m_Z0 - m15 / m11);
             }
         }
 
@@ -190,7 +199,7 @@ namespace Growth.Voronoi
                     }
 
                     // Sum (+/-)cofactor * minor.
-                    d = d + scale * a[0, j1] * this.Determinant(m, n - 1);
+                    d = d + scale * a[0, j1] * Determinant(m, n - 1);
                     scale = -scale;
                 }
             }
