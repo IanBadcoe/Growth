@@ -49,7 +49,10 @@ namespace Growth.Voronoi
         // vaccuum points are allowed right up to the grid edge
         // solid points must be one cell in (so they can be bounded by vacuum)
         public IEnumerable<Vec3Int> AllGridNeighbours(Vec3Int pnt,
-            IProgressiveVoronoi.Solidity permitted_for = IProgressiveVoronoi.Solidity.Vacuum);
+            Solidity permitted_for = IProgressiveVoronoi.Solidity.Vacuum);
+
+        public IEnumerable<Vec3Int> OrthoGridNeighbours(Vec3Int pnt,
+            Solidity permitted_for = IProgressiveVoronoi.Solidity.Vacuum);
 
         IEnumerable<IProgressivePoint> AllPoints { get; }
 

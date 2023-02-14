@@ -174,6 +174,17 @@ namespace Growth.Voronoi
             }
         }
 
+        public IEnumerable<Vec3Int> OrthoGridNeighbours(Vec3Int pnt, IProgressiveVoronoi.Solidity permitted_for = IProgressiveVoronoi.Solidity.Vacuum)
+        {
+            foreach (var n in pnt.OrthoNeighbours)
+            {
+                if (InRange(n, permitted_for))
+                {
+                    yield return n;
+                }
+            }
+        }
+
         public IEnumerable<IProgressivePoint> AllPoints => Points.Values;
 
         public bool InRange(Vec3Int cell, IProgressiveVoronoi.Solidity solid)
