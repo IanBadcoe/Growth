@@ -16,11 +16,11 @@ namespace Growth.Voronoi
             IVPolyhedron.MeshType mesh_type,
             Material material)
         {
-            Position = pos;
             Cell = cell;
             Voronoi = pv;
-            MeshType = mesh_type;
             Material = material;
+
+            PolyhedronRW = new VPolyhedron(pos, mesh_type);
         }
         
         public readonly ProgressiveVoronoi Voronoi;
@@ -28,7 +28,7 @@ namespace Growth.Voronoi
         #region IProgressivePoint
         public bool Exists { get; set; } = false;
 
-        public Vec3 Position { get; }
+        public Vec3 Position => Polyhedron.Centre;
 
         public Vec3Int Cell { get; }
 
@@ -67,12 +67,22 @@ namespace Growth.Voronoi
             }
         }
 
-        public IVPolyhedron.MeshType MeshType { get; set; }
+        public IVPolyhedron.MeshType MeshType {
+            get
+            {
+                return Polyhedron.Type;
+            }
+
+            set
+            {
+                PolyhedronRW.Type = value;
+            }
+        }
 
         public Material Material { get; set; }
         #endregion
 
-        public VPolyhedron PolyhedronRW { get; set; }
+        public VPolyhedron PolyhedronRW { get; }
 
         private Mesh MeshInner;
 
@@ -302,11 +312,6 @@ namespace Growth.Voronoi
 
             // this one should exist...
             ProgressivePoint point = Points[cell];
-
-            if (point.Polyhedron == null)
-            {
-                point.PolyhedronRW = new VPolyhedron(point.Position, pnt.MeshType);
-            }
 
             foreach (ProgressivePoint neighbour in PointNeighbours(point))
             {

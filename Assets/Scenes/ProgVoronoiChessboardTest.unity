@@ -332,38 +332,5 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7580067306166847451, guid: 060347027a2db654b9db928efce2c41a, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents:
-    - {fileID: 7580067306166847451, guid: 060347027a2db654b9db928efce2c41a, type: 3}
+    m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 060347027a2db654b9db928efce2c41a, type: 3}
---- !u!1 &7580067306637993231 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6712976757571184959, guid: 060347027a2db654b9db928efce2c41a, type: 3}
-  m_PrefabInstance: {fileID: 7580067306637993230}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &7580067306637993232
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7580067306637993231}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 36613629fbaa73b4094de9d95de29258, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  MeshContainer: {fileID: 7580067306637993233}
-  MeshTemplate: {fileID: 2854676176631705337, guid: 13d7f17b8bdff1540a76648c28d5a6b4, type: 3}
-  Materials:
-  - {fileID: 2100000, guid: 9cb35aba69894f44eb604d272eafa79b, type: 2}
-  - {fileID: 2100000, guid: 4fb88b56acd5a934682679c9ed631845, type: 2}
-  RSeed: 999
---- !u!1 &7580067306637993233 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2205858902139443525, guid: 060347027a2db654b9db928efce2c41a, type: 3}
-  m_PrefabInstance: {fileID: 7580067306637993230}
-  m_PrefabAsset: {fileID: 0}

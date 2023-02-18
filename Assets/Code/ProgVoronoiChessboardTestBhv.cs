@@ -101,7 +101,7 @@ namespace Growth
         private void ProgressiveInstantiateGameObjects(IProgressiveVoronoi ps)
         {
             foreach (var pnt in ps.AllPoints
-                .Where(p => p.Mesh != null)
+                .Where(p => p.Solidity == IProgressiveVoronoi.Solidity.Solid)
                 .Where(p => !GameObjects.ContainsKey(p)))
             {
                 var mat = pnt.Material;

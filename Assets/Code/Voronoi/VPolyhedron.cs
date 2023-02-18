@@ -21,7 +21,7 @@ namespace Growth.Voronoi
         public IReadOnlyList<Face> Faces => FacesRW;
         public IReadOnlyList<Vec3> Verts => Faces.SelectMany(f => f.Verts).Distinct().ToList();
         public Vec3 Centre { get; }
-        public IVPolyhedron.MeshType Type { get; }
+        public IVPolyhedron.MeshType Type { get; set; }
         #endregion
 
         public void AddFace(Face face)
