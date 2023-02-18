@@ -316,25 +316,23 @@ namespace Growth.Voronoi
                 if (face == null)
                 {
                     //PoorMansProfiler.Start("TryCreateFace");
-                    face = TryCreateFace(pnt.Position, neighbour.Position);
+                    face = TryCreateFace(neighbour.Position, pnt.Position);
                     //PoorMansProfiler.End("TryCreateFace");
 
                     if (face != null)
                     {
                         // in here, we are a new face to the neighbour as well...
-                        neighbour.PolyhedronRW.AddFace(pnt, face.Reversed());
+                        neighbour.PolyhedronRW.AddFace(pnt, face);
                     }
-                }
-                else
-                {
-                    // the face our neighbour has is backwards compared to what we want...
-                    face = face.Reversed();
                 }
 
                 if (face != null)
                 {
                     //PoorMansProfiler.Start("AddFace");
-                    pnt.PolyhedronRW.AddFace(neighbour, face);
+                    // the face our neighbour has is backwards compared to what we want...
+                    // and if we just made it, then we made it backwards anyway, because otherwise we end up
+                    // reversing it *twice*
+                    pnt.PolyhedronRW.AddFace(neighbour, face.Reversed());
                     //PoorMansProfiler.End("AddFace");
                 }
             }
