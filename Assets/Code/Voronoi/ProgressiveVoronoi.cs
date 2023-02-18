@@ -308,29 +308,27 @@ namespace Growth.Voronoi
 
         private void GeneratePolyhedron(ProgressivePoint pnt)
         {
-            var cell = pnt.Cell;
-
             // this one should exist...
-            ProgressivePoint point = Points[cell];
+            MyAssert.IsTrue(Points.ContainsKey(pnt.Cell), "unknown point");
 
-            foreach (ProgressivePoint neighbour in PointNeighbours(point))
+            foreach (ProgressivePoint neighbour in PointNeighbours(pnt))
             {
                 //PoorMansProfiler.Start("FaceWithNeighbour");
                 // our neighbour may already have the relevant face...
                 // (if it is non-solid)
-                Face face = neighbour.FaceWithNeighbour(point);
+                Face face = neighbour.FaceWithNeighbour(pnt);
                 //PoorMansProfiler.End("FaceWithNeighbour");
 
                 if (face == null)
                 {
                     //PoorMansProfiler.Start("TryCreateFace");
-                    face = TryCreateFace(point.Position, neighbour.Position);
+                    face = TryCreateFace(pnt.Position, neighbour.Position);
                     //PoorMansProfiler.End("TryCreateFace");
 
                     if (face != null)
                     {
                         // in here, we are a new face to the neighbour as well...
-                        neighbour.FacesMap[point] = face;
+                        neighbour.FacesMap[pnt] = face;
                     }
                 }
                 else
@@ -341,10 +339,10 @@ namespace Growth.Voronoi
 
                 if (face != null)
                 {
-                    point.FacesMap[neighbour] = face;
+                    pnt.FacesMap[neighbour] = face;
 
                     //PoorMansProfiler.Start("AddFace");
-                    point.PolyhedronRW.AddFace(face);
+                    pnt.PolyhedronRW.AddFace(face);
                     //PoorMansProfiler.End("AddFace");
                 }
             }
