@@ -89,7 +89,7 @@ namespace Growth.Voronoi
 
             foreach (var tri in Triangles)
             {
-                ret.AddFace(tri.ToFace((tri.Centre - Centre).Normalised()));
+                ret.AddFace(null, tri.ToFace((tri.Centre - Centre).Normalised()));
             }
 
             return ret;

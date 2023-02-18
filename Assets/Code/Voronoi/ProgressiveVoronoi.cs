@@ -38,11 +38,7 @@ namespace Growth.Voronoi
 
         public Face FaceWithNeighbour(IProgressivePoint neighbour)
         {
-            Face ret = null;
-
-            FacesMap.TryGetValue(neighbour, out ret);
-
-            return ret;
+            return PolyhedronRW.GetFaceByKey(neighbour);
         }
 
         public Mesh Mesh
@@ -85,8 +81,6 @@ namespace Growth.Voronoi
         public VPolyhedron PolyhedronRW { get; }
 
         private Mesh MeshInner;
-
-        public Dictionary<IProgressivePoint, Face> FacesMap = new Dictionary<IProgressivePoint, Face>();
     }
 
     class ProgressiveVoronoi : IProgressiveVoronoi
@@ -328,7 +322,7 @@ namespace Growth.Voronoi
                     if (face != null)
                     {
                         // in here, we are a new face to the neighbour as well...
-                        neighbour.FacesMap[pnt] = face;
+                        neighbour.PolyhedronRW.AddFace(pnt, face.Reversed());
                     }
                 }
                 else
@@ -339,10 +333,8 @@ namespace Growth.Voronoi
 
                 if (face != null)
                 {
-                    pnt.FacesMap[neighbour] = face;
-
                     //PoorMansProfiler.Start("AddFace");
-                    pnt.PolyhedronRW.AddFace(face);
+                    pnt.PolyhedronRW.AddFace(neighbour, face);
                     //PoorMansProfiler.End("AddFace");
                 }
             }

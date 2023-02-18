@@ -15,9 +15,11 @@ namespace Growth.Voronoi
             // may add more types later...
         }
 
-        IReadOnlyList<Face> Faces { get; }
-        IReadOnlyList<Vec3> Verts { get; }
+        IEnumerable<Face> Faces { get; }
+        IEnumerable<Vec3> Verts { get; }
         Vec3 Centre { get; }
         MeshType Type { get; }
+
+        Face GetFaceByKey(object key);
     }
 }
