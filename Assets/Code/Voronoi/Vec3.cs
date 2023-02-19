@@ -24,6 +24,10 @@ namespace Growth.Voronoi
             X = x;
             Y = y;
             Z = z;
+
+            MyAssert.IsTrue(!float.IsNaN(X), "NaN!");
+            MyAssert.IsTrue(!float.IsNaN(Y), "NaN!");
+            MyAssert.IsTrue(!float.IsNaN(Z), "NaN!");
         }
 
         public Vec3(Vector3 p)
@@ -31,6 +35,10 @@ namespace Growth.Voronoi
             X = p.x;
             Y = p.y;
             Z = p.z;
+
+            MyAssert.IsTrue(!float.IsNaN(X), "NaN!");
+            MyAssert.IsTrue(!float.IsNaN(Y), "NaN!");
+            MyAssert.IsTrue(!float.IsNaN(Z), "NaN!");
         }
 
         public Vec3()

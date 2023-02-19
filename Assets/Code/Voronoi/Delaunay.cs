@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Growth.Voronoi
 {
-    class Delaunay : IDelaunay
+    public class Delaunay : IDelaunay
     {
         public Delaunay(float tolerance)
         {
@@ -65,6 +65,8 @@ namespace Growth.Voronoi
             return tags;
         }
         public float Tolerance { get; }
+        public IReadOnlyList<Vec3> BoundingPoints { get; set; }
+
         #endregion
 
         #region IPolyhedronSet
@@ -100,9 +102,12 @@ namespace Growth.Voronoi
 
                 foreach (var p in Verts)
                 {
-                    if (tet.Sphere.Contains(p, Tolerance))
+                    if (!tet.Verts.Contains(p))
                     {
-                        return false;
+                        if (tet.Sphere.Contains(p, Tolerance))
+                        {
+                            return false;
+                        }
                     }
                 }
             }
@@ -115,7 +120,7 @@ namespace Growth.Voronoi
             PoorMansProfiler.Start("AddVert");
             PoorMansProfiler.Start("Find Tets");
             // SPATIAL SEARCH
-            List<DTetrahedron> bad_tets = Tets.Where(tet => tet.Sphere.Contains(vert, Tolerance)).ToList();
+            List<DTetrahedron> bad_tets = Tets.Where(tet => tet.Sphere.Contains(vert, 0)).ToList();
             PoorMansProfiler.End("Find Tets");
 
             PoorMansProfiler.Start("Build Triangular Poly");
@@ -142,6 +147,8 @@ namespace Growth.Voronoi
             }
             PoorMansProfiler.End("Add Tets");
             PoorMansProfiler.End("AddVert");
+
+            MyAssert.IsTrue(Validate(), "Invalid");
         }
 
         private void RemoveTetInner(DTetrahedron tet)
@@ -159,6 +166,15 @@ namespace Growth.Voronoi
                     VecToTet[v].Remove(tet);
                 }
             }
+        }
+
+        public void InitialiseWithTet(Vec3[] verts)
+        {
+            var bounding_tet = new DTetrahedron(verts[0], verts[1], verts[2], verts[3]);
+
+            AddTet(bounding_tet);
+
+            BoundingPoints = new List<Vec3>(verts);
         }
 
         public void InitialiseWithVerts(Vec3[] verts)
@@ -187,6 +203,8 @@ namespace Growth.Voronoi
             var c1 = c0 + new Vec3(size * 3, 0, 0);
             var c2 = c0 + new Vec3(0, size * 3, 0);
             var c3 = c0 + new Vec3(0, 0, size * 3);
+
+            BoundingPoints = new List<Vec3> (verts);
 
             var bounding_tet = new DTetrahedron(c0, c1, c2, c3);
             //System.Diagnostics.Debug.Assert(bounding_tet.Valid);

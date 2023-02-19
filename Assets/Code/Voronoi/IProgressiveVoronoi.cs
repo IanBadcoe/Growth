@@ -60,6 +60,8 @@ namespace Growth.Voronoi
                                                                             // "solid" cells must remain 1 inside that
         Vec3 Cell2Vert(Vec3Int cell, CellPosition pos);
         Vec3Int Vert2Cell(Vec3 vert);
+
+        IDelaunay Delaunay { get; }
     }
 
     public interface IProgressivePoint

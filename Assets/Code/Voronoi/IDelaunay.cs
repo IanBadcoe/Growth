@@ -11,5 +11,6 @@ namespace Growth.Voronoi
         public IEnumerable<Vec3> Verts { get; }
         public List<String> GetVertTags(Vec3 v);
         public float Tolerance { get; }
+        public IReadOnlyList<Vec3> BoundingPoints { get; }
     }
 }

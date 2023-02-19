@@ -11,7 +11,7 @@ namespace Growth.Voronoi
     class ProgressiveVoronoi : IProgressiveVoronoi
     {
         readonly int Size;
-        readonly Delaunay Delaunay;
+        readonly Delaunay DelaunayRW;
         readonly Dictionary<Vec3Int, ProgressivePoint> Points;
         readonly ClRand Random;
         readonly RTree<Vec3> PolyVerts;    // these are the polygon/polyhedron verts
@@ -22,7 +22,7 @@ namespace Growth.Voronoi
         public ProgressiveVoronoi(int size, float tolerance, float perturbation, ClRand random)
         {
             Size = size;
-            Delaunay = new Delaunay(tolerance);
+            DelaunayRW = new Delaunay(tolerance);
             Points = new Dictionary<Vec3Int, ProgressivePoint>();
             Random = random;
             PolyVerts = new RTree<Vec3>();
@@ -153,6 +153,7 @@ namespace Growth.Voronoi
 
             return new Vec3(cell.X + 0.5f, cell.Y + 0.5f, cell.Z + 0.5f);
         }
+        public IDelaunay Delaunay => DelaunayRW;
 
         #endregion
 
@@ -222,7 +223,7 @@ namespace Growth.Voronoi
             c += offset;
             d += offset;
 
-            Delaunay.InitialiseWithVerts(new Vec3[] { a, b, c, d });
+            DelaunayRW.InitialiseWithTet(new Vec3[] { a, b, c, d });
         }
 
         private void GeneratePolyhedron(ProgressivePoint pnt)
@@ -310,14 +311,12 @@ namespace Growth.Voronoi
 
             PoorMansProfiler.Start("MergeVerts");
 
-            Vec3 first_vec = AddFindPolyVert(face_verts[0]);
-            Vec3 prev_vec = first_vec;
+            Vec3 prev_vec = AddFindPolyVert(face_verts.Last());
 
             List<Vec3> merged_verts = new List<Vec3>(face_verts.Count);
-            merged_verts.Add(first_vec);
 
             // first: AddFind all verts into a set stored on this Voronoi
-            for (int i = 1; i < face_verts.Count - 1; i++)
+            for (int i = 0; i < face_verts.Count; i++)
             {
                 Vec3 here_vec = AddFindPolyVert(face_verts[i]);
 
@@ -327,15 +326,6 @@ namespace Growth.Voronoi
                 }
 
                 prev_vec = here_vec;
-            }
-
-            Vec3 last_vec = AddFindPolyVert(face_verts[face_verts.Count - 1]);
-
-            // because we unconditionally added the first vert
-            // the last must be different from the previous and the first
-            if (last_vec != first_vec && last_vec != prev_vec)
-            {
-                merged_verts.Add(last_vec);
             }
 
             PoorMansProfiler.End("MergeVerts");
@@ -359,7 +349,7 @@ namespace Growth.Voronoi
             // but those are hard to eliminate because the middle vert needs to disappear on this poly
             // but probably _not_ on its neighbour
             //
-            // and I think all that happens with those is we do not know which was round to draw them, 
+            // and I think all that happens with those is we do not know which way round to draw them, 
             // but they are all but invisible anyway...
 
             PoorMansProfiler.Start("Face ctor");
@@ -414,7 +404,7 @@ namespace Growth.Voronoi
 
                 MyAssert.IsTrue(Points.ContainsKey(Vert2Cell(pnt)), "Added a point but now cannot find it");
 
-                Delaunay.AddVert(pnt);
+                DelaunayRW.AddVert(pnt);
             }
 
             pp.Exists = true;
