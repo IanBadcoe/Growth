@@ -146,7 +146,7 @@ namespace Growth.Voronoi
             return this / Length();
         }
 
-        private float Length()
+        public float Length()
         {
             return Mathf.Sqrt(Length2());
         }

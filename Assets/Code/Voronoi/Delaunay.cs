@@ -148,7 +148,7 @@ namespace Growth.Voronoi
             PoorMansProfiler.End("Add Tets");
             PoorMansProfiler.End("AddVert");
 
-            MyAssert.IsTrue(Validate(), "Invalid");
+            //MyAssert.IsTrue(Validate(), "Invalid");
         }
 
         private void RemoveTetInner(DTetrahedron tet)

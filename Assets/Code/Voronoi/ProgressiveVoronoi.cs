@@ -10,33 +10,40 @@ namespace Growth.Voronoi
 {
     class ProgressiveVoronoi : IProgressiveVoronoi
     {
-        readonly int Size;
         readonly Delaunay DelaunayRW;
         readonly Dictionary<Vec3Int, ProgressivePoint> Points;
-        readonly ClRand Random;
         readonly RTree<Vec3> PolyVerts;    // these are the polygon/polyhedron verts
                                            // just kept here so we can merge those which are too close together
                                            // to help eliminate degenerate polygons
-        readonly float Perturbation;
+
+        readonly IPVMapper Mapper;
 
         public ProgressiveVoronoi(int size, float tolerance, float perturbation, ClRand random)
+            : this(new Mappers.CubeMapper(size, random, perturbation), tolerance)
         {
-            Size = size;
+        }
+
+        public ProgressiveVoronoi(IPVMapper mapper, float tolerance)
+        {
+            // very basic, and will iterate Random differently between debug and release, but can uncomment if suspicious...
+            // (and may inject a vert for cell (0, 0, 0) in debug, but that should be harmless apart from changing
+            // Random as discussed)
+            MyAssert.IsTrue(new Vec3Int(0, 0, 0).Equals(mapper.Vert2Cell(mapper.MakeVertForCell(new Vec3Int(0, 0, 0)))), "Mapper integrity test failed...");
+
+            Mapper = mapper;
             DelaunayRW = new Delaunay(tolerance);
             Points = new Dictionary<Vec3Int, ProgressivePoint>();
-            Random = random;
             PolyVerts = new RTree<Vec3>();
-            Perturbation = perturbation;
 
-            InitialiseDelaunay(size);
+            InitialiseDelaunay(Mapper.Bounds());
         }
-        
+
         #region IPolyhedronSet
         public IEnumerable<IVPolyhedron> Polyhedrons => Points.Values.Select(pv => pv.Polyhedron).Where(p => p != null);
         #endregion
 
         #region IProgressiveVoronoi
-        public void AddPoint(Vec3Int cell,
+        public IProgressivePoint AddPoint(Vec3Int cell,
             IVPolyhedron.MeshType mesh_type, Material material)
         {
             PoorMansProfiler.Start("AddPoint");
@@ -56,12 +63,12 @@ namespace Growth.Voronoi
             {
                 if (!pp.Exists)
                 {
-                    AddPointInner(pp.Cell, PerturbPoint(pp.Cell), IProgressiveVoronoi.Solidity.Vacuum,
+                    AddPointInner(pp.Cell, Mapper.MakeVertForCell(pp.Cell), IProgressiveVoronoi.Solidity.Vacuum,
                         IVPolyhedron.MeshType.Unknown, null);
                 }
             }
 
-            var npp = AddPointInner(cell, PerturbPoint(cell),
+            var npp = AddPointInner(cell, Mapper.MakeVertForCell(cell),
                 IProgressiveVoronoi.Solidity.Solid, mesh_type,
                 material);
 
@@ -72,6 +79,8 @@ namespace Growth.Voronoi
             PoorMansProfiler.End("Generate Polyhedron");
 
             PoorMansProfiler.End("AddPoint");
+
+            return npp;
         }
 
         public IProgressivePoint Point(Vec3Int cell)
@@ -87,57 +96,27 @@ namespace Growth.Voronoi
             return new ProgressivePoint(Cell2Vert(cell, IProgressiveVoronoi.CellPosition.Centre), cell, this, IVPolyhedron.MeshType.Unknown, null);
         }
 
-        public void RemovePoint(Vec3Int position)
-        {
-            throw new System.NotImplementedException();
-        }
-
         public IEnumerable<Vec3Int> AllGridNeighbours(Vec3Int pnt, IProgressiveVoronoi.Solidity permitted_for = IProgressiveVoronoi.Solidity.Vacuum)
         {
-            foreach (var n in pnt.AllNeighbours)
-            {
-                if (InRange(n, permitted_for))
-                {
-                    yield return n;
-                }
-            }
+            return Mapper.AllGridNeighbours(pnt, permitted_for);
         }
 
         public IEnumerable<Vec3Int> OrthoGridNeighbours(Vec3Int pnt, IProgressiveVoronoi.Solidity permitted_for = IProgressiveVoronoi.Solidity.Vacuum)
         {
-            foreach (var n in pnt.OrthoNeighbours)
-            {
-                if (InRange(n, permitted_for))
-                {
-                    yield return n;
-                }
-            }
+            return Mapper.OrthoGridNeighbours(pnt, permitted_for);
+        }
+
+        public bool InRange(Vec3Int cell, IProgressiveVoronoi.Solidity solid)
+        {
+            return Mapper.InRange(cell, solid);
         }
 
         public IEnumerable<IProgressivePoint> AllPoints => Points.Values;
 
-        public bool InRange(Vec3Int cell, IProgressiveVoronoi.Solidity solid)
-        {
-            MyAssert.IsTrue(solid != IProgressiveVoronoi.Solidity.Unknown, "Asking InRange question about unknown solitity");
-
-            // vacuum points are allowed all the way to the edge
-            if (solid == IProgressiveVoronoi.Solidity.Vacuum)
-            {
-                return cell.X >= 0 && cell.X < Size
-                    && cell.Y >= 0 && cell.Y < Size
-                    && cell.Z >= 0 && cell.Z < Size;
-            }
-
-            // solid points must have room for a vacuum point next to them...
-            return cell.X >= 1 && cell.X < Size - 1
-                && cell.Y >= 1 && cell.Y < Size - 1
-                && cell.Z >= 1 && cell.Z < Size - 1;
-        }
-
         public Vec3Int Vert2Cell(Vec3 vert)
         {
             // unit-scale for the moment...
-            return vert.ToVec3Int();
+            return Mapper.Vert2Cell(vert);
         }
 
         public Vec3 Cell2Vert(Vec3Int cell, IProgressiveVoronoi.CellPosition pos)
@@ -157,11 +136,9 @@ namespace Growth.Voronoi
 
         #endregion
 
-        private void InitialiseDelaunay(int size)
+        private void InitialiseDelaunay(VBounds bounds)
         {
-            float half_size = size / 2.0f;
-
-            float sphere_radius = Mathf.Sqrt(half_size * half_size * 3);
+            float sphere_radius = bounds.Size.Length() / 2;
 
             // did a whole slew of maths to show Q = 1/6 * sqrt(2/3) is the closest approach (centre) of
             // a tet face to the tet centroid (when the tet edge length is 1)
@@ -215,8 +192,8 @@ namespace Growth.Voronoi
             c *= tet_size;
             d *= tet_size;
 
-            // translate the tet so that our requested cube is located between 0 and size:
-            var offset = new Vec3(half_size, half_size, half_size);
+            // translate the tet so that our requested cube is located where bounds was
+            var offset = bounds.Centre;
 
             a += offset;
             b += offset;
@@ -416,15 +393,6 @@ namespace Growth.Voronoi
             PoorMansProfiler.End("AddPointInner");
 
             return pp;
-        }
-
-        private Vec3 PerturbPoint(Vec3Int cell)
-        {
-            // our point is in the centre of the cell +/- a randomisation
-            return new Vec3(
-                cell.X + Random.FloatRange(-Perturbation, Perturbation) + 0.5f,
-                cell.Y + Random.FloatRange(-Perturbation, Perturbation) + 0.5f,
-                cell.Z + Random.FloatRange(-Perturbation, Perturbation) + 0.5f);
         }
     }
 }

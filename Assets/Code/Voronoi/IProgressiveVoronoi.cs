@@ -36,14 +36,10 @@ namespace Growth.Voronoi
             Origin
         }
 
-        void AddPoint(Vec3Int position,             // currently this is implicitly "solid" as we do not need any manual way of adding
-            IVPolyhedron.MeshType mesh_type,        // vacuum points...
+        IProgressivePoint AddPoint(Vec3Int position,    // currently this is implicitly "solid" as we do not need any manual way of adding
+            IVPolyhedron.MeshType mesh_type,            // vacuum points...
             Material material);                 
                                                 
-        void RemovePoint(Vec3Int position);         // currently a euphemism for setting it vacuum, but want a true delete later
-                                                    // will need to make that "smart" in that if we are a bound of a point which is still
-                                                    // solid, then we need not to delete, and similarly, if we have vacuum neighbours
-                                                    // which are only there for us, they need to delete too...
         IProgressivePoint Point(Vec3Int pos);
 
         // vaccuum points are allowed right up to the grid edge
@@ -62,18 +58,5 @@ namespace Growth.Voronoi
         Vec3Int Vert2Cell(Vec3 vert);
 
         IDelaunay Delaunay { get; }
-    }
-
-    public interface IProgressivePoint
-    {
-        bool Exists { get; }            // we need something to return, even if we have no point at this point
-        Vec3 Position { get; }
-        Vec3Int Cell { get; }           // even if we have no point, this is filled in with the centre of the cell asked about
-        IProgressiveVoronoi.Solidity Solidity { get; }
-        IVPolyhedron Polyhedron { get; }
-        Face FaceWithNeighbour(IProgressivePoint neighbour);
-        Mesh Mesh { get; }
-        IVPolyhedron.MeshType MeshType { get; }
-        Material Material { get; }
     }
 }
