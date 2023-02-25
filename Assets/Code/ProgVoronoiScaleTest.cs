@@ -33,7 +33,7 @@ namespace Growth.Assets.Code
             Mapper = new Growth.Voronoi.Mappers.CylinderMapper(
                                 50, 100, 100,
                                 new Vec3Int(60, 20, 10),
-                                new Vec3(0.05f, 0.05f, 0.05f),
+                                new Vec3(0.15f, 0.15f, 0.15f),
                                 Random.NewClRand()
                             );
             Voronoi = new ProgressiveVoronoi(
