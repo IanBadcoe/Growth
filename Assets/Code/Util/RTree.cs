@@ -3,8 +3,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Growth.Util
 {
@@ -207,7 +205,7 @@ namespace Growth.Util
 
             if (Root.IsLeaf)
             {
-                Root = new Node (new List<Node>{ item_node, Root });
+                Root = new Node(new List<Node> { item_node, Root });
             }
             else
             {
@@ -224,7 +222,7 @@ namespace Growth.Util
         public void Remove(T t)
         {
             Node t_n = null;
-            foreach(Node n in Search(Root, t.GetBounds()))
+            foreach (Node n in Search(Root, t.GetBounds()))
             {
                 if (ReferenceEquals(n.Item, t))
                 {
@@ -247,7 +245,7 @@ namespace Growth.Util
 
         public bool IsValid()
         {
-            foreach(Node n in EnumerateNodes(true, true, true))
+            foreach (Node n in EnumerateNodes(true, true, true))
             {
                 if (!n.IsValid)
                 {
@@ -277,8 +275,8 @@ namespace Growth.Util
                     if (n.Children.Count > MaxChildren)
                     {
                         return false;
-                    }       
-                    
+                    }
+
                     // root node is allowed < MinChildren as that is how we accommodate small trees
                     if (n != Root && n.Children.Count < MinChildren)
                     {
@@ -302,7 +300,7 @@ namespace Growth.Util
 
             return true;
         }
-        
+
         private IEnumerable<Node> EnumerateNodes(bool include_empty, bool include_internal, bool include_leaves)
         {
             return EnumerateNodes(Root, include_empty, include_internal, include_leaves);
@@ -629,7 +627,7 @@ namespace Growth.Util
                 RemoveFrom(remove_from.Parent, remove_from);
 
                 // reinsert the children of the removed node at the same level then came from...
-                foreach(Node child in remove_from.Children)
+                foreach (Node child in remove_from.Children)
                 {
                     var new_node = InsertNode(Root, child, remove_from.Level);
 

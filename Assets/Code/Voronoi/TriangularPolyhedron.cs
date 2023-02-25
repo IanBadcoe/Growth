@@ -51,7 +51,7 @@ namespace Growth.Voronoi
         }
 
         public readonly List<TriIndex> Triangles = new List<TriIndex>();
-        
+
         public IEnumerable<Triangle> TriFaces
         {
             get
@@ -59,12 +59,12 @@ namespace Growth.Voronoi
                 return Triangles.Select(f => new Triangle(Verts[f.I1], Verts[f.I2], Verts[f.I3]));
             }
         }
-        
+
         public readonly List<Vec3> Verts = new List<Vec3>();
 
         public TriangularPolyhedron(List<DTetrahedron> tets)
         {
-            foreach(var tet in tets)
+            foreach (var tet in tets)
             {
                 AddTetrahedron(tet);
             }

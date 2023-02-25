@@ -1,5 +1,4 @@
-﻿using Growth.Util;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace Growth.Voronoi
@@ -38,8 +37,8 @@ namespace Growth.Voronoi
 
         IProgressivePoint AddPoint(Vec3Int position,    // currently this is implicitly "solid" as we do not need any manual way of adding
             IVPolyhedron.MeshType mesh_type,            // vacuum points...
-            Material material);                 
-                                                
+            Material material);
+
         IProgressivePoint Point(Vec3Int pos);
 
         // vaccuum points are allowed right up to the grid edge

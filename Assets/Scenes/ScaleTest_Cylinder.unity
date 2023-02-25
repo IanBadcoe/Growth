@@ -257,8 +257,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1130920427}
-  - component: {fileID: 1130920426}
-  - component: {fileID: 1130920425}
+  - component: {fileID: 1130920428}
+  - component: {fileID: 1130920429}
   m_Layer: 0
   m_Name: SceneController
   m_TagString: Untagged
@@ -266,45 +266,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1130920425
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1130920424}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 57526ddb548c4f047b0eb7e94c97a44d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  MeshTemplate: {fileID: 2854676176631705337, guid: 13d7f17b8bdff1540a76648c28d5a6b4, type: 3}
-  MeshContainer: {fileID: 914641971}
---- !u!114 &1130920426
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1130920424}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3e22ce8a1c82c234aade7baef53c4757, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  RSeed: 123
-  Materials:
-  - {fileID: 2100000, guid: 59e19fb8846eed4419996cecf32b8ced, type: 2}
-  - {fileID: 2100000, guid: 45933346ef847d3438af8f4cc3c8f3b7, type: 2}
-  - {fileID: 2100000, guid: 15221633990462848a48134e34a754b1, type: 2}
-  - {fileID: 2100000, guid: ada3b8a0415347a4b85a3691ee8360d2, type: 2}
-  - {fileID: 2100000, guid: d5bed878bc449b44c8ae52224e7f6cc4, type: 2}
-  - {fileID: 2100000, guid: 9aa0a37aeff04694fa9d62599e6dd33f, type: 2}
-  - {fileID: 2100000, guid: c025b4ef2f3038a42b3451ab049e9e39, type: 2}
-  - {fileID: 2100000, guid: 5e38fb391fd995f42a8002294591654e, type: 2}
-  - {fileID: 2100000, guid: 630abf2a6da8e4f4b9513fc26613cfb6, type: 2}
-  - {fileID: 2100000, guid: 435d8b5018c61fd4a9c26dabafe7afa6, type: 2}
-  VTB: {fileID: 1130920425}
 --- !u!4 &1130920427
 Transform:
   m_ObjectHideFlags: 0
@@ -321,6 +282,45 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1130920428
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1130920424}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83e728ab50ccbfe42862882675513390, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  RSeed: 123
+  Materials:
+  - {fileID: 2100000, guid: 59e19fb8846eed4419996cecf32b8ced, type: 2}
+  - {fileID: 2100000, guid: 45933346ef847d3438af8f4cc3c8f3b7, type: 2}
+  - {fileID: 2100000, guid: 15221633990462848a48134e34a754b1, type: 2}
+  - {fileID: 2100000, guid: ada3b8a0415347a4b85a3691ee8360d2, type: 2}
+  - {fileID: 2100000, guid: d5bed878bc449b44c8ae52224e7f6cc4, type: 2}
+  - {fileID: 2100000, guid: 9aa0a37aeff04694fa9d62599e6dd33f, type: 2}
+  - {fileID: 2100000, guid: c025b4ef2f3038a42b3451ab049e9e39, type: 2}
+  - {fileID: 2100000, guid: 5e38fb391fd995f42a8002294591654e, type: 2}
+  - {fileID: 2100000, guid: 630abf2a6da8e4f4b9513fc26613cfb6, type: 2}
+  - {fileID: 2100000, guid: 435d8b5018c61fd4a9c26dabafe7afa6, type: 2}
+  VTB: {fileID: 1130920429}
+--- !u!114 &1130920429
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1130920424}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66deb9d32de23eb448957e20f172ec70, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MeshTemplate: {fileID: 2854676176631705337, guid: 13d7f17b8bdff1540a76648c28d5a6b4, type: 3}
+  MeshContainer: {fileID: 914641971}
 --- !u!1 &2047593245
 GameObject:
   m_ObjectHideFlags: 0
@@ -415,10 +415,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 2047593245}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5c517ce01cd40d747b3993978570d5d1, type: 3}
+  m_Script: {fileID: 11500000, guid: d5aef217a2376de439a9c660338c6348, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   Height: 100
   Dist: 200
-  Angle: 0
-  AngularSpeed: 0.005
+  Angle: 25
+  AngularSpeed: 0.003

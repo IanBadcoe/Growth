@@ -1,16 +1,15 @@
 ﻿#define PROFILE_ON
 
-using System;
+using Growth.Util;
+using Growth.Voronoi;
 using System.Collections.Generic;
 using System.Linq;
-using Growth.Voronoi;
 using UnityEngine;
-using Growth.Util;
 
-namespace Growth
+namespace Growth.Behaviour
 {
 
-    public class ProgVoronoiChessboardTestBhv : MonoBehaviour
+    public class ChessTest : MonoBehaviour
     {
         public GameObject MeshContainer;
         public GameObject MeshTemplate;
@@ -52,7 +51,7 @@ namespace Growth
 
                 PoorMansProfiler.Start("Outer");
 
-                foreach(Transform go in MeshContainer.transform)
+                foreach (Transform go in MeshContainer.transform)
                 {
                     Destroy(go.gameObject);
                 }
@@ -64,7 +63,7 @@ namespace Growth
                 float start_time = Time.realtimeSinceStartup;
                 float row_time = start_time;
 
-                for(int i = 10; i < 26; i++)
+                for (int i = 10; i < 26; i++)
                 {
                     for (int j = 10; j < 26; j++)
                     {

@@ -1,7 +1,6 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 
-namespace Growth
+namespace Growth.Behaviour
 {
     public class OrbitCamera : MonoBehaviour
     {

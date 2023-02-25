@@ -59,7 +59,7 @@ namespace Growth.Voronoi
             // could maybe use only OrthoNeighbour here, but then when adding a diagonal neighbour we
             // might change the shape of this cell, requiring a regeneration of part of it
             // so do this for immutability/simplicity for the moment
-            foreach(var pp in this.AllGridNeighbours(cell).Select(pnt => Point(pnt)))
+            foreach (var pp in this.AllGridNeighbours(cell).Select(pnt => Point(pnt)))
             {
                 if (!pp.Exists)
                 {

@@ -1,10 +1,6 @@
-﻿using System;
+﻿using Growth.Util;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Growth.Util;
-using Growth.Voronoi;
 
 namespace Growth.Voronoi.Mappers
 {
@@ -122,7 +118,7 @@ namespace Growth.Voronoi.Mappers
             switch (dir)
             {
                 case IPVMapper.CellDir.PlusX:
-                    return new Vec3Int((cell.X + 1) % Cells.X, cell.Y, cell.Z);                    
+                    return new Vec3Int((cell.X + 1) % Cells.X, cell.Y, cell.Z);
                 case IPVMapper.CellDir.MinusX:
                     return new Vec3Int((cell.X + Cells.X - 1) % Cells.X, cell.Y, cell.Z);
                 case IPVMapper.CellDir.PlusY:

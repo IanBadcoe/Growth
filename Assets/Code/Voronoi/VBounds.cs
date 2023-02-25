@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace Growth.Voronoi
 {
@@ -76,7 +75,8 @@ namespace Growth.Voronoi
             return new VBounds(Min - exp_vec, Max + exp_vec);
         }
 
-        public IEnumerable<Vec3> Corners {
+        public IEnumerable<Vec3> Corners
+        {
             get
             {
                 yield return new Vec3(Min.X, Min.Y, Min.Z);
@@ -100,7 +100,7 @@ namespace Growth.Voronoi
             {
                 return other;
             }
-            
+
             if (other.IsEmpty)
             {
                 return this;
@@ -127,7 +127,7 @@ namespace Growth.Voronoi
         #region IEquatable
         public bool Equals(VBounds other)
         {
-            return Min.Equals(other.Min) && Max.Equals(other.Max); 
+            return Min.Equals(other.Min) && Max.Equals(other.Max);
         }
         #endregion
 

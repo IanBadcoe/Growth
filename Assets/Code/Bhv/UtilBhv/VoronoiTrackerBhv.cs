@@ -1,10 +1,9 @@
 ﻿using Growth.Voronoi;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace Growth.Assets.Code
+namespace Growth.Behaviour
 {
     public class VoronoiTrackerBhv : MonoBehaviour
     {

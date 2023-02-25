@@ -5,8 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Growth.Util
@@ -72,7 +70,7 @@ namespace Growth.Util
         [System.Diagnostics.Conditional("PROFILE_ON")]
         public static void Dump()
         {
-            foreach(var s in DumpToEnum())
+            foreach (var s in DumpToEnum())
             {
                 System.Diagnostics.Debug.Write(s);
             }

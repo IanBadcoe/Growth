@@ -7,7 +7,7 @@ namespace Growth.Voronoi
 {
     class ProgressivePoint : IProgressivePoint
     {
-        public ProgressivePoint(Vec3 pos, 
+        public ProgressivePoint(Vec3 pos,
             Vec3Int cell,
             ProgressiveVoronoi pv,
             IVPolyhedron.MeshType mesh_type,
@@ -19,7 +19,7 @@ namespace Growth.Voronoi
 
             PolyhedronRW = new VPolyhedron(pos, mesh_type);
         }
-        
+
         public readonly ProgressiveVoronoi Voronoi;
 
         #region IProgressivePoint
@@ -60,7 +60,8 @@ namespace Growth.Voronoi
             }
         }
 
-        public IVPolyhedron.MeshType MeshType {
+        public IVPolyhedron.MeshType MeshType
+        {
             get
             {
                 return Polyhedron.Type;

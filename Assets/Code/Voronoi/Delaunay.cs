@@ -42,7 +42,7 @@ namespace Growth.Voronoi
         {
             if (VecToTet.ContainsKey(vert))
             {
-                foreach(var tet in VecToTet[vert])
+                foreach (var tet in VecToTet[vert])
                 {
                     yield return tet;
                 }
@@ -77,10 +77,10 @@ namespace Growth.Voronoi
         {
             TetsRW.Add(tet);
 
-            foreach(var v in tet.Verts)
+            foreach (var v in tet.Verts)
             {
                 List<DTetrahedron> tets;
-                
+
                 if (!VecToTet.TryGetValue(v, out tets))
                 {
                     tets = new List<DTetrahedron>();
@@ -204,7 +204,7 @@ namespace Growth.Voronoi
             var c2 = c0 + new Vec3(0, size * 3, 0);
             var c3 = c0 + new Vec3(0, 0, size * 3);
 
-            BoundingPoints = new List<Vec3> (verts);
+            BoundingPoints = new List<Vec3>(verts);
 
             var bounding_tet = new DTetrahedron(c0, c1, c2, c3);
             //System.Diagnostics.Debug.Assert(bounding_tet.Valid);
@@ -217,7 +217,7 @@ namespace Growth.Voronoi
             {
                 MyAssert.IsTrue(bounding_tet.Sphere.Contains(c, -Tolerance / 10), "Bounds corner not in circumsphere");
             }
-            foreach (var c in new Vec3[] {c0, c1, c2, c3})
+            foreach (var c in new Vec3[] { c0, c1, c2, c3 })
             {
                 MyAssert.IsTrue(bounding_tet.Sphere.Contains(c, -Tolerance / 10), "Tet corner not in circumsphere");
             }

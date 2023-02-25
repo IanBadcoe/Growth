@@ -1,14 +1,12 @@
 ﻿using Growth.Util;
 using Growth.Voronoi;
-using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using System.Collections.Generic;
-using System;
 
-namespace Growth.Assets.Code
+namespace Growth.Behaviour
 {
-    public class ProgVoronoiScaleTest : MonoBehaviour
+    public class ScaleTest_Cylinder : MonoBehaviour
     {
         public int RSeed = 123;
         public Material[] Materials;
@@ -82,7 +80,7 @@ namespace Growth.Assets.Code
             IProgressivePoint found = null;
             IProgressivePoint point = null;
 
-            while(found == null)
+            while (found == null)
             {
                 var solid_point_list = OpenCells.Keys.ToList();
 
@@ -96,22 +94,22 @@ namespace Growth.Assets.Code
 
                     TidyOpenList(point, IPVMapper.CellDir.PlusX);
                 }
-                
+
                 if (try_found == null && OpenCells[point].Contains(IPVMapper.CellDir.MinusX))
                 {
                     try_found = Mapper.StepCell(point.Cell, IPVMapper.CellDir.MinusX);
 
                     TidyOpenList(point, IPVMapper.CellDir.MinusX);
                 }
-                
-                if(try_found == null && OpenCells[point].Contains(IPVMapper.CellDir.PlusY))
+
+                if (try_found == null && OpenCells[point].Contains(IPVMapper.CellDir.PlusY))
                 {
                     try_found = Mapper.StepCell(point.Cell, IPVMapper.CellDir.PlusY);
 
                     TidyOpenList(point, IPVMapper.CellDir.PlusY);
                 }
 
-                if (try_found == null && OpenCells[point].Contains(IPVMapper.CellDir.PlusZ)) 
+                if (try_found == null && OpenCells[point].Contains(IPVMapper.CellDir.PlusZ))
                 {
                     try_found = Mapper.StepCell(point.Cell, IPVMapper.CellDir.PlusZ);
 

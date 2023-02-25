@@ -1,8 +1,7 @@
-﻿using System;
-using UnityEngine;
-using System.Linq;
-using Growth.Voronoi;
+﻿using Growth.Voronoi;
+using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Growth.Util
 {
