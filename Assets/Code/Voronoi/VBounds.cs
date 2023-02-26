@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Growth.Voronoi
 {
@@ -14,6 +15,7 @@ namespace Growth.Voronoi
     // - and override GetHashCode when you override that, also for containers...
 
     // immutable bounds object...
+    [DebuggerDisplay("({Min.X}, {Min.Y}, {Min.Z}) -> ({Max.X}, {Max.Y}, {Max.Z})")]
     public class VBounds : IEquatable<VBounds>
     {
         public Vec3 Min { get; }

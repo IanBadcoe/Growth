@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Growth.Behaviour
 {
-    public class VoronoiTrackerBhv : MonoBehaviour
+    public class VoronoiTracker : MonoBehaviour
     {
         public GameObject MeshTemplate;
         public GameObject MeshContainer;

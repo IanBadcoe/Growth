@@ -16,7 +16,6 @@ namespace Growth.Voronoi
             VecToTet = new Dictionary<Vec3, List<DTetrahedron>>();
 
             Tolerance = tolerance;
-            Tags = new Dictionary<Vec3, List<String>>();
         }
 
         public Delaunay(Delaunay old)
@@ -26,7 +25,6 @@ namespace Growth.Voronoi
             TetsRW = new HashSet<DTetrahedron>(old.TetsRW);
             VecToTet = new Dictionary<Vec3, List<DTetrahedron>>(old.VecToTet);
             Tolerance = old.Tolerance;
-            Tags = old.Tags;
         }
 
         // HashSet keys off Reference identity, not any sort of geometry,
@@ -34,7 +32,7 @@ namespace Growth.Voronoi
         HashSet<DTetrahedron> TetsRW { get; }
         Dictionary<Vec3, List<DTetrahedron>> VecToTet { get; }
 
-        Dictionary<Vec3, List<String>> Tags;
+        List<Vec3> InitialPointsRW;
 
         #region IDelaunay
         public IEnumerable<DTetrahedron> Tets => TetsRW;
@@ -53,19 +51,8 @@ namespace Growth.Voronoi
         {
             return new Delaunay(this);
         }
-        public List<String> GetVertTags(Vec3 v)
-        {
-            List<String> tags;
-
-            if (!Tags.TryGetValue(v, out tags))
-            {
-                return new List<String>();
-            }
-
-            return tags;
-        }
         public float Tolerance { get; }
-        public IReadOnlyList<Vec3> BoundingPoints { get; set; }
+        public IReadOnlyList<Vec3> InitialPoints => InitialPointsRW;
 
         #endregion
 
@@ -151,6 +138,43 @@ namespace Growth.Voronoi
             //MyAssert.IsTrue(Validate(), "Invalid");
         }
 
+        public void RemoveVert(Vec3 vert)
+        {
+            InitialPointsRW.Remove(vert);
+
+            var bad_tets = TetsForVert(vert).ToList();
+
+            foreach(var tet in bad_tets)
+            {
+                RemoveTetInner(tet);
+            }
+
+            var redo_verts = bad_tets.SelectMany(tet => tet.Verts).Distinct().Where(v => v != vert);
+
+            Delaunay temp = new Delaunay(Tolerance);
+
+            temp.InitialiseWithVerts(redo_verts);
+
+            foreach(var tet in temp.Tets)
+            {
+                if (tet.Sphere.Contains(vert, 0))
+                {
+                    if (Tets.FirstOrDefault(t => t.Equals(tet)) == null)
+                    {
+                        AddTet(tet);
+                    }
+                    else
+                    {
+                        MyAssert.IsTrue(true, "bob");
+                    }
+                }
+                else
+                {
+                    MyAssert.IsTrue(true, "bob");
+                }
+            }
+        }
+
         private void RemoveTetInner(DTetrahedron tet)
         {
             TetsRW.Remove(tet);
@@ -174,10 +198,10 @@ namespace Growth.Voronoi
 
             AddTet(bounding_tet);
 
-            BoundingPoints = new List<Vec3>(verts);
+            InitialPointsRW = new List<Vec3>(verts);
         }
 
-        public void InitialiseWithVerts(Vec3[] verts)
+        public void InitialiseWithVerts(IEnumerable<Vec3> verts)
         {
             VBounds b = new VBounds();
 
@@ -204,7 +228,7 @@ namespace Growth.Voronoi
             var c2 = c0 + new Vec3(0, size * 3, 0);
             var c3 = c0 + new Vec3(0, 0, size * 3);
 
-            BoundingPoints = new List<Vec3>(verts);
+            InitialPointsRW = new List<Vec3>(verts);
 
             var bounding_tet = new DTetrahedron(c0, c1, c2, c3);
             //System.Diagnostics.Debug.Assert(bounding_tet.Valid);
@@ -252,19 +276,6 @@ namespace Growth.Voronoi
             MyAssert.IsTrue(!Verts.Contains(c1), "Initial vert not found");
             MyAssert.IsTrue(!Verts.Contains(c2), "Initial vert not found");
             MyAssert.IsTrue(!Verts.Contains(c3), "Initial vert not found");
-        }
-
-        public void TagVert(Vec3 v, string tag)
-        {
-            List<String> tags;
-
-            if (!Tags.TryGetValue(v, out tags))
-            {
-                tags = new List<String>();
-                Tags[v] = tags;
-            }
-
-            tags.Add(tag);
         }
     }
 }

@@ -10,7 +10,7 @@ namespace Growth.Behaviour
     {
         public int RSeed = 123;
         public Material[] Materials;
-        public VoronoiTrackerBhv VTB;
+        public VoronoiTracker VTB;
 
         ProgressiveVoronoi Voronoi;
         IPVMapper Mapper;

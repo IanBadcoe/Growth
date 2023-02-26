@@ -6,7 +6,7 @@ using System.Linq;
 namespace Growth.Voronoi
 {
     [DebuggerDisplay("(({Verts[0].X}, {Verts[0].Y}, {Verts[0].Z}) ({Verts[1].X}, {Verts[1].Y}, {Verts[1].Z}) ({Verts[2].X}, {Verts[2].Y}, {Verts[2].Z}) ({Verts[3].X}, {Verts[3].Y}, {Verts[3].Z}))")]
-    public class DTetrahedron
+    public class DTetrahedron : IEquatable<DTetrahedron>
     {
         public DTetrahedron(Vec3 p0, Vec3 p1, Vec3 p2, Vec3 p3)
         {
@@ -93,6 +93,19 @@ namespace Growth.Voronoi
             }
 
             return ret;
+        }
+
+        public bool Equals(DTetrahedron other)
+        {
+            foreach (var vert in Verts)
+            {
+                if (!other.Verts.Contains(vert))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }
