@@ -7,14 +7,16 @@ using System.Linq;
 namespace Growth.Voronoi
 {
     [DebuggerDisplay("Verts: {Verts.Count}")]
-    public class Face
+    public class Face : IEquatable<Face>
     {
-        public Face(List<Vec3> verts, Vec3 normal)
+        // approx normal is indicative of the hemisphere in which the real normal lies
+        public Face(List<Vec3> verts, Vec3 approx_normal)
         {
             Verts = verts;
 
+            Vec3 actual_normal;
             // fix the rotation direction to match the normal
-            switch (CalcRotationDirection(normal))
+            switch (CalcRotationDirection(approx_normal, out actual_normal))
             {
                 case Face.RotationDirection.Clockwise:
                     break;
@@ -28,7 +30,7 @@ namespace Growth.Voronoi
                     break;
             }
 
-            Normal = normal;
+            Normal = actual_normal;
         }
 
         public IReadOnlyList<Vec3> Verts;
@@ -42,7 +44,7 @@ namespace Growth.Voronoi
             Indeterminate
         }
 
-        public RotationDirection CalcRotationDirection(Vec3 normal)
+        public RotationDirection CalcRotationDirection(Vec3 approx_normal, out Vec3 actual_normal)
         {
             // this works by calculating 2* the signed area of the polygon...
             //
@@ -96,24 +98,52 @@ namespace Growth.Voronoi
             // so if we get the projection on to that of a vector from our centre to any point in the face
             // that will be -ve for anticlockwise, positive for clockwise and close to zero if something is wrong
             // like a degenerate face or the centre being in the plane of the face
-            var prod = normal.Dot(accum.Normalised());
+            Vec3 accum_normalised = accum.Normalised();
+
+            var prod = approx_normal.Dot(accum_normalised);
 
             if (prod > 1e-6f)
             {
+                actual_normal = accum_normalised;
                 return RotationDirection.Clockwise;
             }
 
             if (prod < -1e-6f)
             {
+                actual_normal = -accum_normalised;
                 return RotationDirection.Anticlockwise;
             }
 
+            actual_normal = null;
             return RotationDirection.Indeterminate;
+        }
+
+        public bool IsInside(Vec3 vert)
+        {
+            throw new NotImplementedException();
         }
 
         internal Face Reversed()
         {
             return new Face(Verts.Reverse().ToList(), -Normal);
+        }
+
+        public bool Equals(Face other)
+        {
+            return Normal == other.Normal
+                && new HashSet<Vec3>(Verts) == new HashSet<Vec3>(other.Verts);
+        }
+
+        public override int GetHashCode()
+        {
+            int ret = Normal.GetHashCode();
+
+            foreach(var vert in Verts)
+            {
+                ret = ret * 3 + vert.GetHashCode();
+            }
+
+            return ret;
         }
     }
 }
