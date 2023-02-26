@@ -12,17 +12,15 @@ namespace Growth.Voronoi
         // approx normal is indicative of the hemisphere in which the real normal lies
         public Face(List<Vec3> verts, Vec3 approx_normal)
         {
-            Verts = verts;
-
             Vec3 actual_normal;
             // fix the rotation direction to match the normal
-            switch (CalcRotationDirection(approx_normal, out actual_normal))
+            switch (CalcRotationDirection(verts, approx_normal, out actual_normal))
             {
                 case Face.RotationDirection.Clockwise:
                     break;
 
                 case Face.RotationDirection.Anticlockwise:
-                    Verts = Verts.Reverse().ToList();
+                    verts.Reverse();
                     break;
 
                 case Face.RotationDirection.Indeterminate:
@@ -64,7 +62,7 @@ namespace Growth.Voronoi
             Indeterminate
         }
 
-        public RotationDirection CalcRotationDirection(Vec3 approx_normal, out Vec3 actual_normal)
+        public static RotationDirection CalcRotationDirection(List<Vec3> verts, Vec3 approx_normal, out Vec3 actual_normal)
         {
             // this works by calculating 2* the signed area of the polygon...
             //
@@ -96,16 +94,16 @@ namespace Growth.Voronoi
             // ALSO, by making all the vectors relative, we avoid any precision problems with cross-products of very long vectors
             // that produce very large results which we have to subract from each other and arrive at a relatively very small number...
 
-            var prev = Verts[1] - Verts[0];
+            var prev = verts[1] - verts[0];
 
             // as we are relative to Vert[0], all cross-products involving that disappear, so we start with
             // Verts[2] x Verts[1] and go up to Verts[N] x Verts[N-1]
             // e.g. for a triangle the only one left is 2,1 (losing 1,0 and 0,2)
             // and for a square re have 2,1 and 3,1
             Vec3 accum = new Vec3();
-            for (int i = 2; i < Verts.Count; i++)
+            for (int i = 2; i < verts.Count; i++)
             {
-                var here = Verts[i] - Verts[0];
+                var here = verts[i] - verts[0];
                 accum += prev.Cross(here);
 
                 prev = here;
