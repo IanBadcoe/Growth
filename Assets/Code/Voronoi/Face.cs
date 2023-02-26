@@ -31,6 +31,26 @@ namespace Growth.Voronoi
             }
 
             Normal = actual_normal;
+
+            Verts = FixPermute(verts);
+        }
+
+        private List<Vec3> FixPermute(List<Vec3> verts)
+        {
+            var first_vec = verts.Aggregate(verts.First(), (v1, v2) => v1.IsBefore(v2) ? v1 : v2);
+
+            var ret = new List<Vec3>();
+
+            int j = verts.IndexOf(first_vec);
+
+            for (int i = 0; i < verts.Count; i++)
+            {
+                ret.Add(verts[j]);
+
+                j = (j + 1) % verts.Count;
+            }
+
+            return ret;
         }
 
         public IReadOnlyList<Vec3> Verts;
@@ -123,15 +143,28 @@ namespace Growth.Voronoi
             throw new NotImplementedException();
         }
 
-        internal Face Reversed()
+        public Face Reversed()
         {
             return new Face(Verts.Reverse().ToList(), -Normal);
         }
 
         public bool Equals(Face other)
         {
-            return Normal == other.Normal
-                && new HashSet<Vec3>(Verts) == new HashSet<Vec3>(other.Verts);
+            if (!Normal.Equals(other.Normal)
+                || Verts.Count != other.Verts.Count)
+            {
+                return false;
+            }
+
+            for(int i = 0; i < Verts.Count; i++)
+            {
+                if (!Verts[i].Equals(other.Verts[i]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         public override int GetHashCode()
@@ -140,7 +173,7 @@ namespace Growth.Voronoi
 
             foreach(var vert in Verts)
             {
-                ret = ret * 3 + vert.GetHashCode();
+                ret = ret * 13 + vert.GetHashCode();
             }
 
             return ret;
