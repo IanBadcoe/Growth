@@ -113,41 +113,40 @@ namespace Growth.Voronoi.Mappers
                 new Vec3(MaxRadius, Height, MaxRadius));
         }
 
-        public Vec3Int StepCell(Vec3Int cell, IPVMapper.CellDir dir)
+        public Vec3Int StepCell(Vec3Int cell, IPVMapper.CellDir dir, IProgressiveVoronoi.Solidity permitted_for)
         {
+            Vec3Int ret = null;
+
             switch (dir)
             {
                 case IPVMapper.CellDir.PlusX:
-                    return new Vec3Int((cell.X + 1) % Cells.X, cell.Y, cell.Z);
+                    ret = new Vec3Int((cell.X + 1) % Cells.X, cell.Y, cell.Z);
+                    break;
+
                 case IPVMapper.CellDir.MinusX:
-                    return new Vec3Int((cell.X + Cells.X - 1) % Cells.X, cell.Y, cell.Z);
+                    ret = new Vec3Int((cell.X + Cells.X - 1) % Cells.X, cell.Y, cell.Z);
+                    break;
+
                 case IPVMapper.CellDir.PlusY:
-                    if (cell.Y < Cells.Y - 1)
-                    {
-                        return new Vec3Int(cell.X, cell.Y + 1, cell.Z);
-                    }
+                        ret = new Vec3Int(cell.X, cell.Y + 1, cell.Z);
                     break;
 
                 case IPVMapper.CellDir.MinusY:
-                    if (cell.Y > 0)
-                    {
-                        return new Vec3Int(cell.X, cell.Y - 1, cell.Z);
-                    }
+                    ret = new Vec3Int(cell.X, cell.Y - 1, cell.Z);
                     break;
 
                 case IPVMapper.CellDir.PlusZ:
-                    if (cell.Z < Cells.Z - 1)
-                    {
-                        return new Vec3Int(cell.X, cell.Y, cell.Z + 1);
-                    }
+                    ret = new Vec3Int(cell.X, cell.Y, cell.Z + 1);
                     break;
 
                 case IPVMapper.CellDir.MinusZ:
-                    if (cell.Z > 0)
-                    {
-                        return new Vec3Int(cell.X, cell.Y, cell.Z - 1);
-                    }
+                    ret = new Vec3Int(cell.X, cell.Y, cell.Z - 1);
                     break;
+            }
+
+            if (InRange(ret, permitted_for))
+            {
+                return ret;
             }
 
             return null;

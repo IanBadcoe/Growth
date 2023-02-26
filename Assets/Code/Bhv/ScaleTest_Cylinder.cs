@@ -80,41 +80,17 @@ namespace Growth.Behaviour
             IProgressivePoint found = null;
             IProgressivePoint point = null;
 
-            while (found == null)
+            while (found == null && OpenCells.Count > 0)
             {
                 var solid_point_list = OpenCells.Keys.ToList();
 
-                point = Random.RandomFromList(solid_point_list);
+                point = solid_point_list.First(); // Random.RandomFromList(solid_point_list);
 
-                Vec3Int try_found = null;
+                var dir = OpenCells[point].First();
 
-                if (OpenCells[point].Contains(IPVMapper.CellDir.PlusX))
-                {
-                    try_found = Mapper.StepCell(point.Cell, IPVMapper.CellDir.PlusX);
+                Vec3Int try_found = Mapper.StepCell(point.Cell, dir, IProgressiveVoronoi.Solidity.Solid);
 
-                    TidyOpenList(point, IPVMapper.CellDir.PlusX);
-                }
-
-                if (try_found == null && OpenCells[point].Contains(IPVMapper.CellDir.MinusX))
-                {
-                    try_found = Mapper.StepCell(point.Cell, IPVMapper.CellDir.MinusX);
-
-                    TidyOpenList(point, IPVMapper.CellDir.MinusX);
-                }
-
-                if (try_found == null && OpenCells[point].Contains(IPVMapper.CellDir.PlusY))
-                {
-                    try_found = Mapper.StepCell(point.Cell, IPVMapper.CellDir.PlusY);
-
-                    TidyOpenList(point, IPVMapper.CellDir.PlusY);
-                }
-
-                if (try_found == null && OpenCells[point].Contains(IPVMapper.CellDir.PlusZ))
-                {
-                    try_found = Mapper.StepCell(point.Cell, IPVMapper.CellDir.PlusZ);
-
-                    TidyOpenList(point, IPVMapper.CellDir.PlusZ);
-                }
+                TidyOpenList(point, dir);
 
                 if (try_found != null)
                 {

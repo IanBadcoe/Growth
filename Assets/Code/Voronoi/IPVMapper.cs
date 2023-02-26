@@ -39,6 +39,6 @@ namespace Growth.Voronoi
 
         VBounds Bounds();
 
-        Vec3Int StepCell(Vec3Int cell, CellDir dir);
+        Vec3Int StepCell(Vec3Int cell, CellDir dir, IProgressiveVoronoi.Solidity permitted_for);
     }
 }
