@@ -36,7 +36,7 @@ namespace Growth.Voronoi
         }
 
         IProgressivePoint AddPoint(Vec3Int position,    // currently this is implicitly "solid" as we do not need any manual way of adding
-            IVPolyhedron.MeshType mesh_type,            // vacuum points...
+            IPolyhedron.MeshType mesh_type,            // vacuum points...
             Material material);
 
         IProgressivePoint Point(Vec3Int pos);

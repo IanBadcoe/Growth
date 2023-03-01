@@ -43,7 +43,7 @@ namespace Growth
             if (running && Time.realtimeSinceStartup > NextUpdate)
             {
                 Material material = Materials[MaterialIdx];
-                IVPolyhedron.MeshType mesh_type = MaterialIdx > 1 ? IVPolyhedron.MeshType.Faces : IVPolyhedron.MeshType.Smooth;
+                IPolyhedron.MeshType mesh_type = MaterialIdx > 1 ? IPolyhedron.MeshType.Faces : IPolyhedron.MeshType.Smooth;
                 MaterialIdx = (MaterialIdx + 1) % Materials.Count;
 
                 if (!Voronoi.AllPoints.Any())

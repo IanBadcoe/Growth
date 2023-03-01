@@ -50,7 +50,9 @@ namespace Growth.Voronoi
             return new Delaunay(this);
         }
         public float Tolerance { get; }
-        public IVPolyhedron OuterHull()
+
+        // not structly the outer hull, if we are not convext
+        public IPolyhedron OuterSurface()
         {
             Dictionary<Face, int> face_dictionary = new Dictionary<Face, int>();
 
@@ -77,7 +79,7 @@ namespace Growth.Voronoi
 
             var centre = faces.Aggregate(new Vec3(), (v, f) => v + f.Centre) / faces.Count;
 
-            VPolyhedron ret = new VPolyhedron(centre, IVPolyhedron.MeshType.Faces);
+            Polyhedron ret = new Polyhedron(centre, IPolyhedron.MeshType.Faces, false);
 
             foreach(var f in faces)
             {
@@ -89,7 +91,7 @@ namespace Growth.Voronoi
         #endregion
 
         #region IPolyhedronSet
-        public IEnumerable<IVPolyhedron> Polyhedrons => Tets.Select(tet => tet.ToPolyhedron());
+        public IEnumerable<IPolyhedron> Polyhedrons => Tets.Select(tet => tet.ToPolyhedron());
         #endregion
 
         public void AddTet(DTetrahedron tet)

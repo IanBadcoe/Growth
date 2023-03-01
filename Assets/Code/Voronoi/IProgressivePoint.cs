@@ -8,10 +8,10 @@ namespace Growth.Voronoi
         Vec3 Position { get; }
         Vec3Int Cell { get; }           // even if we have no point, this is filled in with the centre of the cell asked about
         IProgressiveVoronoi.Solidity Solidity { get; }
-        IVPolyhedron Polyhedron { get; }
+        IPolyhedron Polyhedron { get; }
         Face FaceWithNeighbour(IProgressivePoint neighbour);
         Mesh Mesh { get; }
-        IVPolyhedron.MeshType MeshType { get; }
+        IPolyhedron.MeshType MeshType { get; }
         Material Material { get; }
     }
 }

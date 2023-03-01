@@ -6,23 +6,30 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class OuterHullTest : MonoBehaviour
+public class OuterSurfaceTest : MonoBehaviour
 {
     public GameObject MeshContainer;
     public GameObject MeshTemplate;
 
     public Material Material;
 
+    enum DMode
+    {
+        SplitATet,
+        PileOfVerts
+    }
+
+    DMode Mode = DMode.SplitATet;
     public int RSeed;
     public int Points = 4;
 
+    DMode LastMode = DMode.PileOfVerts;
     int LastRSeed = -1;
     int LastPoints;
 
     GameObject Obj;
     List<GameObject> Objs = new List<GameObject>();
 
-    bool Wait = true;
 
     // Start is called before the first frame update
     void Start()
@@ -31,13 +38,18 @@ public class OuterHullTest : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Q))
+        if (Input.GetKeyDown(KeyCode.M))
         {
-            Wait = false;
-        }
+            switch(Mode)
+            {
+                case DMode.SplitATet:
+                    Mode = DMode.PileOfVerts;
+                    break;
 
-        if (Wait) {
-            return; 
+                case DMode.PileOfVerts:
+                    Mode = DMode.SplitATet;
+                    break;
+            }
         }
 
         if (Input.GetKeyDown(KeyCode.R))
@@ -55,7 +67,7 @@ public class OuterHullTest : MonoBehaviour
             Points--;
         }
 
-        if (RSeed == LastRSeed && Points == LastPoints)
+        if (RSeed == LastRSeed && Points == LastPoints && Mode == LastMode)
             return;
 
         if (Obj != null)
@@ -71,6 +83,8 @@ public class OuterHullTest : MonoBehaviour
         Objs.Clear();
 
         var random = new ClRand(RSeed);
+
+        LastMode = Mode;
         LastRSeed = RSeed;
         LastPoints = Points;
 
@@ -84,16 +98,26 @@ public class OuterHullTest : MonoBehaviour
             verts.Add(vert);
         }
 
-        DTetrahedron bound = del.GetBoundingTet(verts);
-
-        del.InitialiseWithTet(bound.Verts.ToArray());
-
-        foreach(var v in verts)
+        switch(Mode)
         {
-            del.AddVert(v);
+            case DMode.SplitATet:
+                DTetrahedron bound = del.GetBoundingTet(verts);
+
+                del.InitialiseWithTet(bound.Verts.ToArray());
+
+                foreach (var v in verts)
+                {
+                    del.AddVert(v);
+                }
+
+                break;
+
+            case DMode.PileOfVerts:
+                del.InitialiseWithVerts(verts);
+                break;
         }
 
-        IVPolyhedron hull = del.OuterHull();
+        IPolyhedron hull = del.OuterSurface();
 
         Obj = GenerateMesh(hull, Material);
 
@@ -106,7 +130,7 @@ public class OuterHullTest : MonoBehaviour
         }
     }
 
-    private GameObject GenerateMesh(IVPolyhedron poly, Material mat)
+    private GameObject GenerateMesh(IPolyhedron poly, Material mat)
     {
         var mesh = MeshUtil.Polyhedron2Mesh(poly, poly.Centre);
 

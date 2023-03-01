@@ -60,7 +60,7 @@ public class TetTestBhv : MonoBehaviour
         go.transform.localScale = new Vector3(sphere_radius * 2, sphere_radius * 2, sphere_radius * 2);
         go.GetComponent<MeshRenderer>().material = Materials[1];
 
-        GenerateMesh(VPolyhedron.Cube(Size), Materials[2]);
+        GenerateMesh(Polyhedron.Cube(Size), Materials[2]);
     }
 
     private void GenerateMeshes(IPolyhedronSet ps)
@@ -75,7 +75,7 @@ public class TetTestBhv : MonoBehaviour
         }
     }
 
-    private void GenerateMesh(IVPolyhedron poly, Material mat)
+    private void GenerateMesh(IPolyhedron poly, Material mat)
     {
         var mesh = new Mesh();
 

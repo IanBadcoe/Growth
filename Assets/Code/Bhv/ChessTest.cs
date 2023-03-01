@@ -57,7 +57,7 @@ namespace Growth.Behaviour
                 }
 
                 Material material = Materials[MaterialIdx];
-                IVPolyhedron.MeshType mesh_type = MaterialIdx > 1 ? IVPolyhedron.MeshType.Faces : IVPolyhedron.MeshType.Smooth;
+                IPolyhedron.MeshType mesh_type = MaterialIdx > 1 ? IPolyhedron.MeshType.Faces : IPolyhedron.MeshType.Smooth;
                 MaterialIdx = (MaterialIdx + 1) % Materials.Count;
 
                 float start_time = Time.realtimeSinceStartup;
@@ -68,7 +68,7 @@ namespace Growth.Behaviour
                     for (int j = 10; j < 26; j++)
                     {
                         Voronoi.AddPoint(new Vec3Int(i, 10, j),
-                            IVPolyhedron.MeshType.Faces, Materials[(i + j + 10) % 2]);
+                            IPolyhedron.MeshType.Faces, Materials[(i + j + 10) % 2]);
                     }
 
                     float now = Time.realtimeSinceStartup;

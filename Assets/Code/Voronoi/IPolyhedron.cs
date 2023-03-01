@@ -2,7 +2,7 @@
 
 namespace Growth.Voronoi
 {
-    public interface IVPolyhedron
+    public interface IPolyhedron
     {
         enum MeshType
         {

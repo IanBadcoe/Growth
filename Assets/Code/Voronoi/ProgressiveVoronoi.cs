@@ -39,12 +39,12 @@ namespace Growth.Voronoi
         }
 
         #region IPolyhedronSet
-        public IEnumerable<IVPolyhedron> Polyhedrons => Points.Values.Select(pv => pv.Polyhedron).Where(p => p != null);
+        public IEnumerable<IPolyhedron> Polyhedrons => Points.Values.Select(pv => pv.Polyhedron).Where(p => p != null);
         #endregion
 
         #region IProgressiveVoronoi
         public IProgressivePoint AddPoint(Vec3Int cell,
-            IVPolyhedron.MeshType mesh_type, Material material)
+            IPolyhedron.MeshType mesh_type, Material material)
         {
             PoorMansProfiler.Start("AddPoint");
 
@@ -64,7 +64,7 @@ namespace Growth.Voronoi
                 if (!pp.Exists)
                 {
                     AddPointInner(pp.Cell, Mapper.MakeVertForCell(pp.Cell), IProgressiveVoronoi.Solidity.Vacuum,
-                        IVPolyhedron.MeshType.Unknown, null);
+                        IPolyhedron.MeshType.Unknown, null);
                 }
             }
 
@@ -93,7 +93,7 @@ namespace Growth.Voronoi
             }
 
             // default ProgressivePoint has Exists = false, and Solitity = Unknown...
-            return new ProgressivePoint(Cell2Vert(cell, IProgressiveVoronoi.CellPosition.Centre), cell, this, IVPolyhedron.MeshType.Unknown, null);
+            return new ProgressivePoint(Cell2Vert(cell, IProgressiveVoronoi.CellPosition.Centre), cell, this, IPolyhedron.MeshType.Unknown, null);
         }
 
         public IEnumerable<Vec3Int> AllGridNeighbours(Vec3Int pnt, IProgressiveVoronoi.Solidity permitted_for = IProgressiveVoronoi.Solidity.Vacuum)
@@ -365,7 +365,7 @@ namespace Growth.Voronoi
         }
 
         private ProgressivePoint AddPointInner(Vec3Int cell, Vec3 pnt,
-            IProgressiveVoronoi.Solidity solid, IVPolyhedron.MeshType mesh_type,
+            IProgressiveVoronoi.Solidity solid, IPolyhedron.MeshType mesh_type,
             Material material)
         {
             PoorMansProfiler.Start("AddPointInner");

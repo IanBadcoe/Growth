@@ -10,6 +10,6 @@ namespace Growth.Voronoi
         public IEnumerable<DTetrahedron> TetsForVert(Vec3 vert);
         public IEnumerable<Vec3> Verts { get; }
         public float Tolerance { get; }
-        IVPolyhedron OuterHull();
+        IPolyhedron OuterSurface();
     }
 }

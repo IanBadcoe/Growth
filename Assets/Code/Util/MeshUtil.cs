@@ -12,12 +12,12 @@ namespace Growth.Util
         // so that when we instantiate this we set its position equal to that
         // and everything lands in the right position
         // *BUT* the cell position can be read off the GameObject transform
-        public static Mesh Polyhedron2Mesh(IVPolyhedron poly, Vec3 origin)
+        public static Mesh Polyhedron2Mesh(IPolyhedron poly, Vec3 origin)
         {
-            MyAssert.IsTrue(poly.Type != IVPolyhedron.MeshType.Unknown,
+            MyAssert.IsTrue(poly.Type != IPolyhedron.MeshType.Unknown,
                 "Trying to make a mesh of unknown type...");
 
-            if (poly.Type == IVPolyhedron.MeshType.Smooth)
+            if (poly.Type == IPolyhedron.MeshType.Smooth)
             {
                 return SmoothMesh(poly, origin);
             }
@@ -25,7 +25,7 @@ namespace Growth.Util
             return FaceMesh(poly, origin);
         }
 
-        static Mesh SmoothMesh(IVPolyhedron poly, Vec3 origin)
+        static Mesh SmoothMesh(IPolyhedron poly, Vec3 origin)
         {
             var mesh = new Mesh();
 
@@ -50,7 +50,7 @@ namespace Growth.Util
             return mesh;
         }
 
-        static Mesh FaceMesh(IVPolyhedron poly, Vec3 origin)
+        static Mesh FaceMesh(IPolyhedron poly, Vec3 origin)
         {
             var mesh = new Mesh();
 

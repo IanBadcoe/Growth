@@ -10,14 +10,14 @@ namespace Growth.Voronoi
         public ProgressivePoint(Vec3 pos,
             Vec3Int cell,
             ProgressiveVoronoi pv,
-            IVPolyhedron.MeshType mesh_type,
+            IPolyhedron.MeshType mesh_type,
             Material material)
         {
             Cell = cell;
             Voronoi = pv;
             Material = material;
 
-            PolyhedronRW = new VPolyhedron(pos, mesh_type);
+            PolyhedronRW = new Polyhedron(pos, mesh_type, true);
         }
 
         public readonly ProgressiveVoronoi Voronoi;
@@ -31,7 +31,7 @@ namespace Growth.Voronoi
 
         public IProgressiveVoronoi.Solidity Solidity { get; set; } = IProgressiveVoronoi.Solidity.Unknown;
 
-        public IVPolyhedron Polyhedron => PolyhedronRW;
+        public IPolyhedron Polyhedron => PolyhedronRW;
 
         public Face FaceWithNeighbour(IProgressivePoint neighbour)
         {
@@ -60,7 +60,7 @@ namespace Growth.Voronoi
             }
         }
 
-        public IVPolyhedron.MeshType MeshType
+        public IPolyhedron.MeshType MeshType
         {
             get
             {
@@ -76,7 +76,7 @@ namespace Growth.Voronoi
         public Material Material { get; set; }
         #endregion
 
-        public VPolyhedron PolyhedronRW { get; }
+        public Polyhedron PolyhedronRW { get; }
 
         private Mesh MeshInner;
     }

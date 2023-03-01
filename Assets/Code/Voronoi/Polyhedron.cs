@@ -6,13 +6,17 @@ using System.Linq;
 namespace Growth.Voronoi
 {
     [DebuggerDisplay("Faces: {Faces.Count} Verts {Verts.Count}")]
-    public class VPolyhedron : IVPolyhedron
+    public class Polyhedron : IPolyhedron
     {
-        public VPolyhedron(Vec3 centre, IVPolyhedron.MeshType type)
+        public Polyhedron(Vec3 centre, IPolyhedron.MeshType type, bool must_be_convex)
         {
             Centre = centre;
             Type = type;
+            MustBeConvex = must_be_convex;
         }
+
+        // Voronoi polyhedra must be convex, polyhedra built arbitrarily may not be...
+        public bool MustBeConvex;
 
         // faces can be added with a key or without, our total faces are the union of the two sets
         List<Face> FacesRW = new List<Face>();
@@ -22,7 +26,7 @@ namespace Growth.Voronoi
         public IEnumerable<Face> Faces => FacesRW.Concat(FacesMapRW.Values);
         public IEnumerable<Vec3> Verts => Faces.SelectMany(f => f.Verts).Distinct();
         public Vec3 Centre { get; }
-        public IVPolyhedron.MeshType Type { get; set; }
+        public IPolyhedron.MeshType Type { get; set; }
 
         public Face GetFaceByKey(object key)
         {
@@ -36,8 +40,11 @@ namespace Growth.Voronoi
 
         public void AddFace(object key, Face face)
         {
-            MyAssert.IsTrue(face.Normal.Dot((face.Centre - Centre).Normalised()) > 0,
-                "Face's idea of its normal not pointing away from polygon centre");
+            if (MustBeConvex)
+            {
+                MyAssert.IsTrue(face.Normal.Dot((face.Centre - Centre).Normalised()) > 0,
+                    "Face's idea of its normal not pointing away from polygon centre");
+            }
 
             if (key != null)
             {
@@ -49,9 +56,9 @@ namespace Growth.Voronoi
             }
         }
 
-        public static VPolyhedron Cube(float size)
+        public static Polyhedron Cube(float size)
         {
-            var ret = new VPolyhedron(new Vec3(0, 0, 0), IVPolyhedron.MeshType.Faces);
+            var ret = new Polyhedron(new Vec3(0, 0, 0), IPolyhedron.MeshType.Faces, true);
 
             float hs = size / 2;
 

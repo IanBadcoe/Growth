@@ -46,7 +46,7 @@ namespace Growth.Behaviour
                 var new_point = Voronoi.AddPoint(
                     new Vec3Int(
                         (int)(i / (float)num_seeds * 60), 1, 1),
-                        IVPolyhedron.MeshType.Faces,
+                        IPolyhedron.MeshType.Faces,
                         Materials[i % Materials.Length]);
 
                 OpenCells[new_point] =
@@ -105,7 +105,7 @@ namespace Growth.Behaviour
 
             var mat = point.Material;
 
-            var new_point = Voronoi.AddPoint(found.Cell, IVPolyhedron.MeshType.Faces, mat);
+            var new_point = Voronoi.AddPoint(found.Cell, IPolyhedron.MeshType.Faces, mat);
             OpenCells[new_point] =
                 new List<IPVMapper.CellDir> {
                                     IPVMapper.CellDir.PlusX,

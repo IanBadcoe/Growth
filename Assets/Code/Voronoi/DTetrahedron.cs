@@ -45,11 +45,11 @@ namespace Growth.Voronoi
             return Verts.Contains(p);
         }
 
-        public VPolyhedron ToPolyhedron()
+        public Polyhedron ToPolyhedron()
         {
             //            var ret = new VPolyhedron(Sphere.Centre);
             // the centre here is the geometric center of the tetrahedron, not the circumcentre
-            var ret = new VPolyhedron(Verts.Aggregate((x, y) => x + y) * 0.25f, IVPolyhedron.MeshType.Faces);
+            var ret = new Polyhedron(Verts.Aggregate((x, y) => x + y) * 0.25f, IPolyhedron.MeshType.Faces, true);
 
             foreach (var tri in Triangles)
             {
