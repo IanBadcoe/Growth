@@ -19,42 +19,6 @@ namespace Growth.Voronoi
 
         public Vec3 Centre => Verts.Aggregate((v1, v2) => v1 + v2) / 4;
 
-        public enum AdjoinsResult
-        {
-            Separate,
-            Point,
-            Edge,
-            Face,
-            Identity
-        }
-
-        public AdjoinsResult Adjoins(DTetrahedron tet)
-        {
-            int count = 0;
-
-            foreach (var p in Verts)
-            {
-                if (tet.Verts.Contains(p))
-                {
-                    count++;
-                }
-            }
-
-            switch (count)
-            {
-                case 1:
-                    return AdjoinsResult.Point;
-                case 2:
-                    return AdjoinsResult.Edge;
-                case 3:
-                    return AdjoinsResult.Face;
-                case 4:
-                    return AdjoinsResult.Identity;
-            }
-
-            return AdjoinsResult.Separate;
-        }
-
         public bool Valid
         {
             get
@@ -109,3 +73,41 @@ namespace Growth.Voronoi
         }
     }
 }
+
+
+//public enum AdjoinsResult
+//{
+//    Separate,
+//    Point,
+//    Edge,
+//    Face,
+//    Identity
+//}
+
+//public AdjoinsResult Adjoins(DTetrahedron tet)
+//{
+//    int count = 0;
+
+//    foreach (var p in Verts)
+//    {
+//        if (tet.Verts.Contains(p))
+//        {
+//            count++;
+//        }
+//    }
+
+//    switch (count)
+//    {
+//        case 1:
+//            return AdjoinsResult.Point;
+//        case 2:
+//            return AdjoinsResult.Edge;
+//        case 3:
+//            return AdjoinsResult.Face;
+//        case 4:
+//            return AdjoinsResult.Identity;
+//    }
+
+//    return AdjoinsResult.Separate;
+//}
+
