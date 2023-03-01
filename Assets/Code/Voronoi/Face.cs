@@ -9,6 +9,22 @@ namespace Growth.Voronoi
     [DebuggerDisplay("Verts: {Verts.Count}")]
     public class Face : IEquatable<Face>
     {
+        // for internal usage when we know the data is good and we do not want any rounding errors
+        // messing with the hash when, for example, we Reverse one twice...
+        Face(Face old, bool reverse)
+        {
+            if (reverse)
+            {
+                Verts = FixPermute(old.Verts.Reverse().ToList());
+                Normal = -old.Normal;
+            }
+            else
+            {
+                Verts = old.Verts;
+                Normal = old.Normal;
+            }
+        }
+
         // approx normal is indicative of the hemisphere in which the real normal lies
         public Face(List<Vec3> verts, Vec3 approx_normal)
         {
@@ -51,7 +67,7 @@ namespace Growth.Voronoi
             return ret;
         }
 
-        public IReadOnlyList<Vec3> Verts;
+        public IReadOnlyList<Vec3> Verts { get; }
         public Vec3 Normal { get; }
         public Vec3 Centre => Verts.Aggregate((v1, v2) => v1 + v2) / Verts.Count;
 
@@ -136,38 +152,26 @@ namespace Growth.Voronoi
             return RotationDirection.Indeterminate;
         }
 
-        public bool IsInside(Vec3 vert)
+        public bool IsVertInside(Vec3 vert, float tolerance)
         {
-            throw new NotImplementedException();
+            Vec3 delta = vert - Verts[0];
+
+            float dot = delta.Dot(Normal);
+
+            // normals point OUT, we are testing if we are IN
+            // meaning in || out by less than tolerance
+            return dot < tolerance;
         }
 
         public Face Reversed()
         {
-            return new Face(Verts.Reverse().ToList(), -Normal);
-        }
-
-        public bool Equals(Face other)
-        {
-            if (!Normal.Equals(other.Normal)
-                || Verts.Count != other.Verts.Count)
-            {
-                return false;
-            }
-
-            for(int i = 0; i < Verts.Count; i++)
-            {
-                if (!Verts[i].Equals(other.Verts[i]))
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            return new Face(this, true);
         }
 
         public override int GetHashCode()
         {
-            int ret = Normal.GetHashCode();
+            // do not use normal in hash code as it can contain rounding errors
+            int ret = 0;
 
             foreach(var vert in Verts)
             {
@@ -175,6 +179,26 @@ namespace Growth.Voronoi
             }
 
             return ret;
+        }
+
+        public bool Equals(Face other)
+        {
+            // there can be rounding errors on Normals, but
+            // if our verts are the same, then our normal should be the same
+            if (Verts.Count != other.Verts.Count)
+            {
+                return false;
+            }
+
+            for(int i = 0; i < Verts.Count; i++)
+            {
+                if (Verts[i] != other.Verts[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

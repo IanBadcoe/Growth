@@ -32,8 +32,6 @@ namespace Growth.Voronoi
         HashSet<DTetrahedron> TetsRW { get; }
         Dictionary<Vec3, List<DTetrahedron>> VecToTet { get; }
 
-        List<Vec3> InitialPointsRW;
-
         #region IDelaunay
         public IEnumerable<DTetrahedron> Tets => TetsRW;
         public IEnumerable<DTetrahedron> TetsForVert(Vec3 vert)
@@ -52,8 +50,42 @@ namespace Growth.Voronoi
             return new Delaunay(this);
         }
         public float Tolerance { get; }
-        public IReadOnlyList<Vec3> InitialPoints => InitialPointsRW;
+        public IVPolyhedron OuterHull()
+        {
+            Dictionary<Face, int> face_dictionary = new Dictionary<Face, int>();
 
+            foreach (var poly in Polyhedrons)
+            {
+                foreach (var face in poly.Faces)
+                {
+                    Face face_rev = face.Reversed();
+
+                    if (face_dictionary.ContainsKey(face_rev))
+                    {
+                        face_dictionary[face_rev]--;
+                    }
+                    else
+                    {
+                        MyAssert.IsTrue(!face_dictionary.ContainsKey(face), "duplicate face?");
+
+                        face_dictionary[face] = 1;
+                    }
+                }
+            }
+
+            var faces = face_dictionary.Where(entry => entry.Value == 1).Select(entry => entry.Key).ToList();
+
+            var centre = faces.Aggregate(new Vec3(), (v, f) => v + f.Centre) / faces.Count;
+
+            VPolyhedron ret = new VPolyhedron(centre, IVPolyhedron.MeshType.Faces);
+
+            foreach(var f in faces)
+            {
+                ret.AddFace(null, f);
+            }
+
+            return ret;
+        }
         #endregion
 
         #region IPolyhedronSet
@@ -140,8 +172,6 @@ namespace Growth.Voronoi
 
         public void RemoveVert(Vec3 vert)
         {
-            InitialPointsRW.Remove(vert);
-
             var bad_tets = TetsForVert(vert).ToList();
 
             foreach(var tet in bad_tets)
@@ -154,6 +184,8 @@ namespace Growth.Voronoi
             Delaunay temp = new Delaunay(Tolerance);
 
             temp.InitialiseWithVerts(redo_verts);
+
+            MyAssert.IsTrue(temp.Validate(), "invalid!");
 
             foreach(var tet in temp.Tets)
             {
@@ -197,13 +229,48 @@ namespace Growth.Voronoi
             var bounding_tet = new DTetrahedron(verts[0], verts[1], verts[2], verts[3]);
 
             AddTet(bounding_tet);
-
-            InitialPointsRW = new List<Vec3>(verts);
         }
 
         public void InitialiseWithVerts(IEnumerable<Vec3> verts)
         {
+            DTetrahedron bounding_tet = GetBoundingTet(verts);
+
+            AddTet(bounding_tet);
+
+            // all the corners of the bounding volume we just invented should be within the sphere of this tet...
+
+            //System.Diagnostics.Debug.Assert(Validate());
+
+            foreach (var v in verts)
+            {
+                AddVert(v);
+
+                //UnityEngine.Debug.Assert(Validate());
+            }
+
+            var bounding_tet_verts = bounding_tet.Verts.ToArray();
+            var bounding_tet_vert_tets = bounding_tet_verts.SelectMany(vert => TetsForVert(vert)).Distinct().ToList();
+
+            // remove the encapsulating verts we started with, and any associated tets
+            foreach (var tet in bounding_tet_vert_tets)
+            {
+                RemoveTetInner(tet);
+            }
+
+            MyAssert.IsTrue(!Verts.Contains(bounding_tet_verts[0]), "Initial vert not found");
+            MyAssert.IsTrue(!Verts.Contains(bounding_tet_verts[1]), "Initial vert not found");
+            MyAssert.IsTrue(!Verts.Contains(bounding_tet_verts[2]), "Initial vert not found");
+            MyAssert.IsTrue(!Verts.Contains(bounding_tet_verts[3]), "Initial vert not found");
+        }
+
+        public DTetrahedron GetBoundingTet(IEnumerable<Vec3> verts)
+        {
             VBounds b = new VBounds();
+
+            Vec3 c0;
+            Vec3 c1;
+            Vec3 c2;
+            Vec3 c3;
 
             foreach (var p in verts)
             {
@@ -219,23 +286,22 @@ namespace Growth.Voronoi
             }
 
             // build an encapsulating tetrahedron, using whichever axis is longest, and padding by 1 on each dimension
-            Vec3 c0 = new Vec3(b.Min.X - 1, b.Min.Y - 1, b.Min.Z - 1);
+            c0 = new Vec3(b.Min.X - 1, b.Min.Y - 1, b.Min.Z - 1);
             float size = Mathf.Max(b.Size.X, b.Size.Y, b.Size.Z) + 2;
 
             // a right-angled prism which contains that box has its corners on the axes at 3x the
             // box dimensions
-            var c1 = c0 + new Vec3(size * 3, 0, 0);
-            var c2 = c0 + new Vec3(0, size * 3, 0);
-            var c3 = c0 + new Vec3(0, 0, size * 3);
+            c1 = c0 + new Vec3(size * 3, 0, 0);
+            c2 = c0 + new Vec3(0, size * 3, 0);
+            c3 = c0 + new Vec3(0, 0, size * 3);
 
-            InitialPointsRW = new List<Vec3>(verts);
-
-            var bounding_tet = new DTetrahedron(c0, c1, c2, c3);
             //System.Diagnostics.Debug.Assert(bounding_tet.Valid);
 
             // all the corners of the bounding volume we just invented should be within the sphere of this tet...
             // as should c0 -> c3
             // and the original input points
+
+            var bounding_tet = new DTetrahedron(c0, c1, c2, c3);
 
             foreach (var c in b.Corners)
             {
@@ -250,32 +316,7 @@ namespace Growth.Voronoi
                 MyAssert.IsTrue(bounding_tet.Sphere.Contains(c, -Tolerance / 10), "Vert not in circumsphere");
             }
 
-
-            AddTet(bounding_tet);
-
-            // all the corners of the bounding volume we just invented should be within the sphere of this tet...
-
-            //System.Diagnostics.Debug.Assert(Validate());
-
-            foreach (var v in verts)
-            {
-                AddVert(v);
-
-                //UnityEngine.Debug.Assert(Validate());
-            }
-
-            // remove the encapsulating verts we started with, and any associated tets
-            var initial_vert_tets = TetsForVert(c0).Concat(TetsForVert(c1)).Concat(TetsForVert(c2)).Concat(TetsForVert(c3)).Distinct().ToList();
-
-            foreach (var tet in initial_vert_tets)
-            {
-                RemoveTetInner(tet);
-            }
-
-            MyAssert.IsTrue(!Verts.Contains(c0), "Initial vert not found");
-            MyAssert.IsTrue(!Verts.Contains(c1), "Initial vert not found");
-            MyAssert.IsTrue(!Verts.Contains(c2), "Initial vert not found");
-            MyAssert.IsTrue(!Verts.Contains(c3), "Initial vert not found");
+            return bounding_tet;
         }
     }
 }
