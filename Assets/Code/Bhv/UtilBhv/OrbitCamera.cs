@@ -4,10 +4,17 @@ namespace Growth.Behaviour
 {
     public class OrbitCamera : MonoBehaviour
     {
-        public float Height;
         public float Dist;
-        public float Angle;
-        public float AngularSpeed;
+
+        public float Heading;
+        public float Elevation;
+
+        public float AutoAngularSpeed;
+        public float ManualSpeed;
+        public float ElevationSpeed;
+
+        bool Auto = true;
+
         // Use this for initialization
         void Start()
         {
@@ -17,12 +24,45 @@ namespace Growth.Behaviour
         // Update is called once per frame
         void Update()
         {
-            Angle += AngularSpeed;
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                Auto = !Auto;
+            }
 
-            var x = Mathf.Sin(Angle) * Dist;
-            var z = Mathf.Cos(Angle) * Dist;
+            if (Input.GetKey(KeyCode.LeftArrow))
+            {
+                Heading -= ManualSpeed;
+            }
 
-            transform.position = new Vector3(x, Height, z);
+            if (Input.GetKey(KeyCode.RightArrow))
+            {
+                Heading += ManualSpeed;
+            }
+
+            if (Input.GetKey(KeyCode.UpArrow))
+            {
+                Elevation += ElevationSpeed;
+            }
+
+            if (Input.GetKey(KeyCode.DownArrow))
+            {
+                Elevation -= ElevationSpeed;
+            }
+
+            if (Auto)
+            {
+                Heading += AutoAngularSpeed;
+            }
+
+            var sh = Mathf.Sin(Heading);
+            var ch = Mathf.Cos(Heading);
+
+            var se = Mathf.Sin(Elevation);
+            var ce = Mathf.Cos(Elevation);
+
+            var vect = new Vector3(sh * ce, se, ch * ce) * Dist;
+
+            transform.position = vect;
             transform.LookAt(new Vector3(0, 0, 0));
         }
     }
